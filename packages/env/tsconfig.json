@@ -1,0 +1,3 @@
+{
+  "extends": "@ibukos/config/tsconfig.base.json"
+}
