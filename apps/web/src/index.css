@@ -1,1 +1,36 @@
 @import "@ibukos/ui/globals.css";
+
+.page-shell {
+	@apply mx-auto w-full max-w-7xl px-4;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.hover-fine-scale {
+		transition: transform 160ms var(--ease-out);
+	}
+
+	.hover-fine-scale:hover {
+		transform: scale(1.02);
+	}
+
+	.hover-fine-reveal {
+		opacity: 0;
+		transition: opacity 160ms var(--ease-out);
+	}
+
+	.group\/card:hover .hover-fine-reveal,
+	[data-slot="card"]:hover .hover-fine-reveal {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hover-fine-scale:hover {
+		transform: none;
+	}
+
+	.hover-fine-reveal {
+		opacity: 1;
+		transition: none;
+	}
+}

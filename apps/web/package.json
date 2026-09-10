@@ -5,9 +5,12 @@
   "scripts": {
     "build": "vite build",
     "serve": "vite preview",
-    "dev": "vite dev"
+    "dev": "vite dev",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "^4.3.2",
+    "@hugeicons/react": "^1.1.10",
     "@ibukos/auth": "workspace:*",
     "@ibukos/env": "workspace:*",
     "@ibukos/ui": "workspace:*",
@@ -35,6 +38,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^6.0.4",
     "jsdom": "^30.0.0",
+    "react-grab": "^0.2.0",
     "typescript": "catalog:",
     "vite": "^8.1.5",
     "web-vitals": "^6.0.1"
