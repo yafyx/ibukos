@@ -2,16 +2,16 @@
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Button } from "@ibukos/ui/components/button";
 import { Checkbox } from "@ibukos/ui/components/checkbox";
 import { CheckboxGroup } from "@ibukos/ui/components/checkbox-group";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@ibukos/ui/components/collapsible";
 import { Field, FieldLabel } from "@ibukos/ui/components/field";
-import { Fieldset, FieldsetLegend } from "@ibukos/ui/components/fieldset";
-import { Label } from "@ibukos/ui/components/label";
+import {
+	Popover,
+	PopoverPopup,
+	PopoverTitle,
+	PopoverTrigger,
+} from "@ibukos/ui/components/popover";
 import {
 	Select,
 	SelectContent,
@@ -20,38 +20,52 @@ import {
 	SelectValue,
 } from "@ibukos/ui/components/select";
 import { Slider } from "@ibukos/ui/components/slider";
-import { Switch } from "@ibukos/ui/components/switch";
-import {
-	ToggleGroup,
-	ToggleGroupItem,
-} from "@ibukos/ui/components/toggle-group";
-import {
-	Toolbar,
-	ToolbarButton,
-	ToolbarGroup,
-	ToolbarSeparator,
-} from "@ibukos/ui/components/toolbar";
+import { Toggle } from "@ibukos/ui/components/toggle";
+import { cn } from "@ibukos/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 
 import {
 	DURATIONS,
 	FACILITIES,
 	GENDERS,
-	SORT_KEYS,
+	RULES,
 } from "@/domain/facets/definitions";
 import type { SearchQuery } from "@/domain/facets/types";
 import { applyFacet, clearFacet } from "@/domain/facets/url";
 import {
 	durationLabels,
 	facilityLabels,
+	formatPriceFilterLabel,
 	formatPriceIdr,
 	genderLabels,
-	sortLabels,
+	ruleLabels,
 } from "@/domain/kos/labels";
-import type { FacilityId } from "@/domain/kos/types";
+import type { FacilityId, RuleId } from "@/domain/kos/types";
 
 const PRICE_MAX = 3_000_000;
+
+const pillTriggerClass =
+	"h-7 w-auto min-w-0 shrink-0 whitespace-nowrap [&[data-popup-open]_svg]:rotate-180";
+
+const chevronClassName =
+	"size-3.5 transition-transform duration-[160ms] ease-[var(--ease-out)] motion-reduce:transition-none";
+
+function isFacilityId(value: string): value is FacilityId {
+	return FACILITIES.some((facility) => facility === value);
+}
+
+function isRuleId(value: string): value is RuleId {
+	return RULES.some((rule) => rule === value);
+}
+
+function sliderPair(values: number | readonly number[]): [number, number] {
+	if (typeof values === "number") {
+		return [0, values];
+	}
+	return [values[0] ?? 0, values[1] ?? PRICE_MAX];
+}
 
 export function FilterBar({ query }: { query: SearchQuery }) {
 	const navigate = useNavigate();
@@ -59,6 +73,13 @@ export function FilterBar({ query }: { query: SearchQuery }) {
 		query.priceMin ?? 0,
 		query.priceMax ?? PRICE_MAX,
 	]);
+	const priceLabel = formatPriceFilterLabel(query.priceMin, query.priceMax);
+	const facilitiesActive = query.facilities.length > 0;
+	const rulesActive = query.rules.length > 0;
+
+	useEffect(() => {
+		setPriceRange([query.priceMin ?? 0, query.priceMax ?? PRICE_MAX]);
+	}, [query.priceMin, query.priceMax]);
 
 	function navigateQuery(next: SearchQuery) {
 		navigate({ to: "/cari", search: next });
@@ -71,162 +92,231 @@ export function FilterBar({ query }: { query: SearchQuery }) {
 			navigateQuery(clearFacet(query, "price"));
 			return;
 		}
-		navigateQuery(applyFacet(query, "price", { priceMin: min, priceMax: max }));
+		navigateQuery(
+			applyFacet(query, "price", {
+				priceMin: min > 0 ? min : undefined,
+				priceMax: max < PRICE_MAX ? max : undefined,
+			}),
+		);
 	}
 
 	return (
-		<div className="flex flex-col gap-3">
-			<Toolbar aria-label="Filter kos">
-				<ToolbarGroup>
-					<Fieldset className="flex flex-col gap-1">
-						<FieldsetLegend className="px-1 font-medium text-xs">
-							Tipe kos
-						</FieldsetLegend>
-						<ToggleGroup
-							className="border-none p-0"
-							onValueChange={(values) => {
-								const gender = values[0] as
-									| (typeof GENDERS)[number]
-									| undefined;
-								navigateQuery(applyFacet(query, "gender", gender));
-							}}
-							value={query.gender ? [query.gender] : []}
-						>
-							{GENDERS.map((gender) => (
-								<ToolbarButton
-									key={gender}
-									render={<ToggleGroupItem value={gender} />}
-								>
-									{genderLabels[gender]}
-								</ToolbarButton>
-							))}
-						</ToggleGroup>
-					</Fieldset>
-				</ToolbarGroup>
-				<ToolbarSeparator />
-				<ToolbarGroup>
-					<Field className="min-w-[140px] gap-1">
-						<FieldLabel className="px-1">Durasi</FieldLabel>
-						<Select
-							onValueChange={(value) => {
-								if (value === "all") {
-									navigateQuery(clearFacet(query, "duration"));
-									return;
-								}
-								navigateQuery(applyFacet(query, "duration", value));
-							}}
-							value={query.duration ?? "all"}
-						>
-							<ToolbarButton render={<SelectTrigger className="w-full" />}>
-								<SelectValue>
-									{query.duration ? durationLabels[query.duration] : "Semua"}
-								</SelectValue>
-							</ToolbarButton>
-							<SelectContent>
-								<SelectItem value="all">Semua</SelectItem>
-								{DURATIONS.map((duration) => (
-									<SelectItem key={duration} value={duration}>
-										{durationLabels[duration]}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</Field>
-				</ToolbarGroup>
-				<ToolbarSeparator />
-				<ToolbarGroup>
-					<Field className="min-w-[160px] gap-1">
-						<FieldLabel className="px-1">Urutkan</FieldLabel>
-						<Select
-							onValueChange={(value) =>
-								navigateQuery(applyFacet(query, "sort", value))
-							}
-							value={query.sort}
-						>
-							<ToolbarButton render={<SelectTrigger className="w-full" />}>
-								<SelectValue>{sortLabels[query.sort]}</SelectValue>
-							</ToolbarButton>
-							<SelectContent>
-								{SORT_KEYS.map((sort) => (
-									<SelectItem key={sort} value={sort}>
-										{sortLabels[sort]}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</Field>
-				</ToolbarGroup>
-				<ToolbarSeparator />
-				<ToolbarGroup>
-					<div className="flex items-center gap-2 px-2">
-						<Switch
-							aria-label="Hanya kos dengan kamar tersedia"
-							checked={query.availableOnly}
-							id="filter-available"
-							onCheckedChange={(checked) =>
-								navigateQuery(applyFacet(query, "available", checked))
-							}
-						/>
-						<Label htmlFor="filter-available">Ada kamar</Label>
-					</div>
-				</ToolbarGroup>
-			</Toolbar>
-
-			<Fieldset className="flex max-w-md flex-col gap-3">
-				<FieldsetLegend>
-					Harga {formatPriceIdr(priceRange[0])} –{" "}
-					{formatPriceIdr(priceRange[1])}
-				</FieldsetLegend>
-				<Slider
-					aria-label="Rentang harga sewa"
-					className="flex-1"
-					max={PRICE_MAX}
-					min={0}
-					name="price-range"
-					onValueChange={(values) => {
-						const next = values as number[];
-						setPriceRange([next[0] ?? 0, next[1] ?? PRICE_MAX]);
+		<nav
+			aria-label="Filter pencarian"
+			className="-mx-[var(--page-inline-start)] min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] lg:mx-0 [&::-webkit-scrollbar]:hidden"
+		>
+			<div className="flex w-max min-w-full items-center gap-2 ps-[var(--page-inline-start)] pe-8 lg:px-0">
+				<Select
+					onValueChange={(value) => {
+						if (value === "all") {
+							navigateQuery(clearFacet(query, "gender"));
+							return;
+						}
+						const gender = GENDERS.find((item) => item === value);
+						if (gender) {
+							navigateQuery(applyFacet(query, "gender", gender));
+						}
 					}}
-					onValueCommitted={(values) => commitPrice(values as number[])}
-					step={50_000}
-					value={priceRange}
-				/>
-			</Fieldset>
+					value={query.gender ?? "all"}
+				>
+					<SelectTrigger
+						aria-label={
+							query.gender
+								? `Tipe kos: ${genderLabels[query.gender]}`
+								: "Tipe kos"
+						}
+						className={cn(pillTriggerClass, query.gender && "bg-muted")}
+						size="sm"
+					>
+						<SelectValue>
+							{query.gender ? genderLabels[query.gender] : "Tipe kos"}
+						</SelectValue>
+					</SelectTrigger>
+					<SelectContent alignItemWithTrigger={false}>
+						<SelectItem value="all">Semua tipe</SelectItem>
+						{GENDERS.map((gender) => (
+							<SelectItem key={gender} value={gender}>
+								{genderLabels[gender]}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 
-			<Collapsible>
-				<CollapsibleTrigger className="inline-flex items-center gap-1 font-medium text-sm [&[data-open]_svg]:rotate-180">
-					Fasilitas
-					<HugeiconsIcon
-						aria-hidden="true"
-						className="size-3.5 text-muted-foreground transition-transform"
-						icon={ArrowDown01Icon}
+				<FacetPopover
+					active={Boolean(priceLabel)}
+					label={priceLabel ?? "Harga"}
+				>
+					<PopoverTitle className="text-sm">Harga sewa</PopoverTitle>
+					<p className="mt-1 mb-3 text-muted-foreground text-sm tabular-nums">
+						{formatPriceIdr(priceRange[0])} – {formatPriceIdr(priceRange[1])}
+					</p>
+					<Slider
+						aria-label="Rentang harga sewa"
+						max={PRICE_MAX}
+						min={0}
+						name="price-range"
+						onValueChange={(values) => setPriceRange(sliderPair(values))}
+						onValueCommitted={(values) => commitPrice(sliderPair(values))}
+						step={50_000}
+						value={priceRange}
 					/>
-				</CollapsibleTrigger>
-				<CollapsibleContent>
+					{priceLabel ? (
+						<Button
+							className="mt-3"
+							onClick={() => navigateQuery(clearFacet(query, "price"))}
+							size="sm"
+							type="button"
+							variant="ghost"
+						>
+							Hapus rentang harga
+						</Button>
+					) : null}
+				</FacetPopover>
+
+				<Select
+					onValueChange={(value) => {
+						if (value === "all") {
+							navigateQuery(clearFacet(query, "duration"));
+							return;
+						}
+						const duration = DURATIONS.find((item) => item === value);
+						if (duration) {
+							navigateQuery(applyFacet(query, "duration", duration));
+						}
+					}}
+					value={query.duration ?? "all"}
+				>
+					<SelectTrigger
+						aria-label={
+							query.duration
+								? `Durasi sewa: ${durationLabels[query.duration]}`
+								: "Durasi sewa"
+						}
+						className={cn(pillTriggerClass, query.duration && "bg-muted")}
+						size="sm"
+					>
+						<SelectValue>
+							{query.duration ? durationLabels[query.duration] : "Durasi"}
+						</SelectValue>
+					</SelectTrigger>
+					<SelectContent alignItemWithTrigger={false}>
+						<SelectItem value="all">Semua durasi</SelectItem>
+						{DURATIONS.map((duration) => (
+							<SelectItem key={duration} value={duration}>
+								{durationLabels[duration]}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+
+				<FacetPopover
+					active={facilitiesActive}
+					label={
+						facilitiesActive
+							? `Fasilitas (${query.facilities.length})`
+							: "Fasilitas"
+					}
+				>
+					<PopoverTitle className="mb-3 text-sm">Fasilitas</PopoverTitle>
 					<CheckboxGroup
-						className="flex flex-row flex-wrap gap-3 pt-3"
+						className="flex flex-col gap-1"
 						onValueChange={(values) =>
 							navigateQuery({
 								...query,
-								facilities: (values as string[]).filter(
-									(item): item is FacilityId =>
-										FACILITIES.includes(item as FacilityId),
-								),
+								facilities: values.filter(isFacilityId),
 							})
 						}
 						value={query.facilities}
 					>
 						{FACILITIES.map((facility) => (
-							<Field className="flex-row items-center gap-2" key={facility}>
+							<CheckRow key={facility} label={facilityLabels[facility]}>
 								<Checkbox name="fasilitas" value={facility} />
-								<FieldLabel className="font-normal">
-									{facilityLabels[facility]}
-								</FieldLabel>
-							</Field>
+							</CheckRow>
 						))}
 					</CheckboxGroup>
-				</CollapsibleContent>
-			</Collapsible>
-		</div>
+				</FacetPopover>
+
+				<FacetPopover
+					active={rulesActive}
+					label={rulesActive ? `Aturan (${query.rules.length})` : "Aturan"}
+				>
+					<PopoverTitle className="mb-3 text-sm">Aturan kos</PopoverTitle>
+					<CheckboxGroup
+						className="flex flex-col gap-1"
+						onValueChange={(values) =>
+							navigateQuery({
+								...query,
+								rules: values.filter(isRuleId),
+							})
+						}
+						value={query.rules}
+					>
+						{RULES.map((rule) => (
+							<CheckRow key={rule} label={ruleLabels[rule]}>
+								<Checkbox name="aturan" value={rule} />
+							</CheckRow>
+						))}
+					</CheckboxGroup>
+				</FacetPopover>
+
+				<Toggle
+					className="h-7 min-h-7 shrink-0"
+					onPressedChange={(pressed) =>
+						navigateQuery(applyFacet(query, "available", pressed))
+					}
+					pressed={query.availableOnly}
+					size="sm"
+					variant="outline"
+				>
+					Ada kamar
+				</Toggle>
+			</div>
+		</nav>
+	);
+}
+
+function FacetPopover({
+	active,
+	label,
+	children,
+}: {
+	active: boolean;
+	label: string;
+	children: ReactNode;
+}) {
+	return (
+		<Popover>
+			<PopoverTrigger
+				render={
+					<Button
+						aria-pressed={active}
+						className={cn(pillTriggerClass, active && "bg-muted")}
+						size="sm"
+						variant="outline"
+					/>
+				}
+			>
+				{label}
+				<HugeiconsIcon
+					aria-hidden="true"
+					className={chevronClassName}
+					icon={ArrowDown01Icon}
+				/>
+			</PopoverTrigger>
+			<PopoverPopup align="start" className="w-80">
+				{children}
+			</PopoverPopup>
+		</Popover>
+	);
+}
+
+function CheckRow({ label, children }: { label: string; children: ReactNode }) {
+	return (
+		<Field className="w-full">
+			<FieldLabel className="flex w-full cursor-pointer items-center gap-2.5 font-normal">
+				{children}
+				{label}
+			</FieldLabel>
+		</Field>
 	);
 }

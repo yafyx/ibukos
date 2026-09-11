@@ -3,12 +3,21 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Badge } from "@ibukos/ui/components/badge";
+import { Button } from "@ibukos/ui/components/button";
 import { ScrollArea } from "@ibukos/ui/components/scroll-area";
 import { useNavigate } from "@tanstack/react-router";
 
 import type { ActiveChip } from "@/domain/facets/types";
+import { createEmptyQuery } from "@/domain/facets/url";
+import type { CariView } from "@/domain/geo";
 
-export function FilterChips({ chips }: { chips: ActiveChip[] }) {
+export function FilterChips({
+	chips,
+	view,
+}: {
+	chips: ActiveChip[];
+	view: CariView;
+}) {
 	const navigate = useNavigate();
 
 	if (chips.length === 0) {
@@ -16,30 +25,53 @@ export function FilterChips({ chips }: { chips: ActiveChip[] }) {
 	}
 
 	return (
-		<ScrollArea className="w-full" maskHeight={20}>
-			<div className="flex gap-2 pb-1">
-				{chips.map((chip) => (
-					<Badge
-						className="gap-1 pe-0.5"
-						key={`${chip.facetId}-${chip.label}`}
-						variant="outline"
-					>
-						{chip.label}
-						<button
-							aria-label={`Hapus filter ${chip.label}`}
-							className="-my-px -me-0.5 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[inherit] p-0 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-							onClick={() => navigate({ search: chip.next, to: "/cari" })}
-							type="button"
+		<div className="flex min-w-0 items-center gap-2">
+			<ScrollArea
+				className="min-w-0 flex-1"
+				dragScroll
+				hideHorizontalScrollbar
+				maskHeight={20}
+			>
+				<div className="flex w-max gap-2 py-0.5">
+					{chips.map((chip) => (
+						<Badge
+							className="h-7 gap-1 px-2.5 text-xs"
+							key={`${chip.facetId}-${chip.label}`}
+							render={
+								<button
+									aria-label={`Hapus filter ${chip.label}`}
+									onClick={() => navigate({ search: chip.next, to: "/cari" })}
+									type="button"
+								/>
+							}
+							variant="outline"
 						>
+							{chip.label}
 							<HugeiconsIcon
 								aria-hidden="true"
 								className="size-3"
 								icon={Cancel01Icon}
 							/>
-						</button>
-					</Badge>
-				))}
-			</div>
-		</ScrollArea>
+						</Badge>
+					))}
+				</div>
+			</ScrollArea>
+			{chips.length > 1 ? (
+				<Button
+					className="shrink-0"
+					onClick={() =>
+						navigate({
+							search: { ...createEmptyQuery(), view },
+							to: "/cari",
+						})
+					}
+					size="sm"
+					type="button"
+					variant="ghost"
+				>
+					Hapus semua
+				</Button>
+			) : null}
+		</div>
 	);
 }
