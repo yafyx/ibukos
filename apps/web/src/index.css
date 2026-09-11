@@ -481,6 +481,38 @@ button,
 	filter: grayscale(0.45) sepia(0.14) contrast(0.94) brightness(1.06);
 }
 
+.kos-detail-map .leaflet-tile-pane {
+	filter: saturate(0.28) contrast(0.94) brightness(1.04);
+}
+
+.dark .kos-detail-map .leaflet-tile-pane {
+	filter: saturate(0.22) contrast(0.88) brightness(0.78);
+}
+
+.kos-detail-map .leaflet-control-attribution {
+	font-size: 10px;
+	background: color-mix(in oklch, var(--background) 88%, transparent);
+}
+
+.kos-detail-map .leaflet-control-attribution a {
+	color: inherit;
+}
+
+.kos-detail-pin-wrap {
+	background: none !important;
+	border: none !important;
+}
+
+.kos-detail-pin {
+	display: block;
+	width: 14px;
+	height: 14px;
+	border-radius: 999px;
+	box-shadow:
+		0 0 0 3px oklch(1 0 0 / 0.92),
+		0 4px 12px oklch(0 0 0 / 0.28);
+}
+
 .photo-lightbox {
 	transition:
 		opacity 200ms var(--ease-out),
@@ -606,7 +638,16 @@ button,
 
 .promo-folder {
 	--folder-bg: var(--muted);
-	--folder-stroke: var(--border);
+	--folder-stroke: color-mix(in oklch, var(--foreground) 14%, var(--border));
+	--folder-stroke-active: color-mix(
+		in oklch,
+		var(--foreground) 36%,
+		var(--border)
+	);
+	--folder-tab-height: 2.625rem;
+	--folder-tab-raise: 4px;
+	--folder-tail-reach: 54px;
+	--folder-tail-reach-muted: 32px;
 	overflow: visible;
 }
 
@@ -618,81 +659,296 @@ button,
 
 .promo-folder-nav,
 .promo-folder [data-slot="tabs-list"].promo-folder-nav {
-	--folder-tail-reach: 54px;
 	position: relative;
 	z-index: 1;
 	display: flex;
 	align-items: flex-end;
-	align-self: start;
+	justify-content: flex-start;
+	align-self: stretch;
+	width: 100%;
+	min-width: 0;
 	max-width: 100%;
-	padding-inline-end: 3.5rem;
-	padding-bottom: 1px;
+	padding-bottom: 8px;
+	padding-inline-end: 1.5rem;
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	scrollbar-width: none;
-	translate: 1px 1px;
-	margin-bottom: -2px;
-	gap: calc(var(--folder-tail-reach) - 8px);
+	margin-bottom: -9px;
+	gap: 0;
 	background: transparent;
+	touch-action: pan-x;
+	scroll-padding-inline: 0.75rem;
+	-webkit-overflow-scrolling: touch;
 }
 
 .promo-folder-nav::-webkit-scrollbar {
 	display: none;
 }
 
+@media (width < 40rem) {
+	.promo-folder-nav,
+	.promo-folder [data-slot="tabs-list"].promo-folder-nav {
+		mask-image: linear-gradient(
+			to right,
+			#000 0,
+			#000 calc(100% - 1.5rem),
+			transparent
+		);
+	}
+}
+
+/*
+ * Folder tabs, built like the Next.js dev tools notch: an HTML box with an
+ * SVG S-curve tail glued to it. Every city owns the muted S on its right and
+ * the next city overlaps that tail so the top line reads as continuous.
+ * The active city is the notch: filled, dark outline, a long S on its right
+ * and (when it is not the first city) a mirrored S on its left. The city
+ * before it hides its own S so the two curves never meet in a valley.
+ */
 .promo-folder-notch {
-	--stroke-color: var(--folder-stroke);
-	--background-color: var(--folder-bg);
+	--top-stroke: var(--folder-stroke);
+	--tail-stroke: var(--folder-stroke);
+	--tab-fill: transparent;
+	--tail-width: var(--folder-tail-reach-muted);
 	position: relative;
 	z-index: 1;
 	display: flex;
 	flex: none;
 	align-items: center;
-	isolation: isolate;
-	min-height: 2.625rem;
-	padding: 0.25rem 0;
-	background: var(--background-color);
-	border: 1px solid var(--stroke-color);
-	border-bottom: none;
-	border-inline-end: none;
-	border-start-start-radius: 0;
+	height: var(--folder-tab-height);
+	padding-inline-end: var(--tail-width);
+	background: transparent;
+	pointer-events: none;
 }
 
-.promo-folder-notch:first-child {
-	border-start-start-radius: var(--radius-xl);
-}
-
-.promo-folder-notch[data-active="true"] {
-	z-index: 2;
-	--stroke-color: color-mix(in oklch, var(--foreground) 22%, var(--border));
+.promo-folder-notch + .promo-folder-notch {
+	margin-inline-start: -16px;
 }
 
 .promo-folder-notch-content {
 	position: relative;
 	z-index: 1;
-	margin-right: -10px;
+	display: flex;
+	align-items: center;
+	height: 100%;
+	margin-inline-end: -8px;
+	pointer-events: auto;
 }
 
+/* Background and top edge of the box. Its own layer so FLIP can stretch it
+ * when the notch rises; the label above it only ever slides. */
+.promo-folder-notch-fill {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-block-start: 1px solid var(--top-stroke);
+	background: var(--tab-fill);
+	pointer-events: none;
+	/* Colour changes cross-fade; position changes are FLIPped via transform. */
+	transition:
+		background-color 160ms ease,
+		border-color 160ms ease,
+		box-shadow 160ms ease;
+}
+
+.promo-folder-notch [data-flip] {
+	transform-origin: 0 0;
+}
+
+.promo-folder-notch:first-child .promo-folder-notch-fill {
+	border-inline-start: 1px solid var(--top-stroke);
+	border-start-start-radius: var(--radius-xl);
+}
+
+/* Tails span the full notch height, so a raised notch gets a taller S. */
 .promo-folder-notch-tail {
 	position: absolute;
-	top: -1px;
-	right: -54px;
-	z-index: -1;
-	width: 60px;
-	height: calc(100% + 2px);
+	top: 0;
+	z-index: 0;
+	height: 100%;
 	overflow: visible;
 	pointer-events: none;
+}
+
+.promo-folder-notch-tail path {
+	transition:
+		fill 160ms ease,
+		stroke 160ms ease;
+}
+
+.promo-folder-notch-tail[data-side="end"] {
+	right: 0;
+	width: var(--tail-width);
+}
+
+/* Mirrored inside the SVG; hidden until the city is active. */
+.promo-folder-notch-tail[data-side="start"] {
+	left: 0;
+	width: var(--folder-tail-reach);
+	opacity: 0;
+	transition: opacity 180ms var(--ease-out);
+}
+
+/* The neighbour's top line over each crook. Lives in HTML, pinned to the
+ * row top, so it stays put when the active city rises above the row.
+ * The curve leaves the top 8/60 of the way into the tail. */
+.promo-folder-notch-crook {
+	position: absolute;
+	top: calc(100% - var(--folder-tab-height));
+	z-index: 0;
+	height: 1px;
+	background: var(--folder-stroke);
+	pointer-events: none;
+}
+
+.promo-folder-notch-crook[data-side="end"] {
+	right: 0;
+	width: calc(var(--tail-width) * 52 / 60);
+}
+
+.promo-folder-notch-crook[data-side="start"] {
+	left: 0;
+	width: calc(var(--folder-tail-reach) * 52 / 60);
+	opacity: 0;
+	transition: opacity 180ms var(--ease-out);
+}
+
+/* Nothing follows the last city, so no top line over its crook.
+ * (The tabs indicator is the real :last-child, so test siblings instead.) */
+.promo-folder-notch:not(:has(+ .promo-folder-notch))
+.promo-folder-notch-crook[data-side="end"] {
+	display: none;
+}
+
+/* Active city: the notch, raised a touch above the row. */
+.promo-folder-notch[data-active="true"] {
+	--top-stroke: var(--folder-stroke-active);
+	--tail-stroke: var(--folder-stroke-active);
+	--tab-fill: var(--folder-bg);
+	--tail-width: var(--folder-tail-reach);
+	z-index: 2;
+	height: calc(var(--folder-tab-height) + var(--folder-tab-raise));
+}
+
+.promo-folder-notch[data-active="true"] .promo-folder-notch-content {
+	/* Keep the label on the same baseline as the other cities. */
+	padding-block-start: var(--folder-tab-raise);
+	margin-inline-end: -10px;
+}
+
+.promo-folder-notch[data-active="true"] .promo-folder-notch-fill {
+	box-shadow: 0 8px 0 var(--tab-fill);
+}
+
+/* The raised S crosses the row top ~21/60 into the tail, so the neighbour's
+ * line over the crook starts there instead of at the curve's departure. */
+.promo-folder-notch[data-active="true"]
+.promo-folder-notch-crook[data-side="end"] {
+	width: calc(var(--tail-width) * 39 / 60);
+}
+
+.promo-folder-notch[data-active="true"]
+	.promo-folder-notch-crook[data-side="start"] {
+	width: calc(var(--folder-tail-reach) * 39 / 60);
+}
+
+/* The city after the notch sits over the crook, past the curve. */
+.promo-folder-notch[data-active="true"] + .promo-folder-notch {
+	margin-inline-start: -20px;
+}
+
+/* A non-first active city gets the mirrored tail on its left and starts
+ * right after the previous label, reusing that city's hidden tail space. */
+.promo-folder-notch[data-active="true"]:not(:first-child) {
+	margin-inline-start: -24px;
+	padding-inline-start: var(--folder-tail-reach);
+}
+
+.promo-folder-notch[data-active="true"]:not(:first-child)
+	.promo-folder-notch-content {
+	margin-inline-start: -10px;
+}
+
+.promo-folder-notch[data-active="true"]:not(:first-child)
+	.promo-folder-notch-tail[data-side="start"],
+.promo-folder-notch[data-active="true"]:not(:first-child)
+	.promo-folder-notch-crook[data-side="start"] {
+	opacity: 1;
+}
+
+/* Press feedback on the city itself. */
+.promo-folder-notch [data-slot="tabs-tab"] {
+	height: 100%;
+	min-height: 0;
+	flex-grow: 0;
+	touch-action: manipulation;
+	transition:
+		color 150ms var(--ease-out),
+		transform 160ms var(--ease-out);
+}
+
+.promo-folder-notch [data-slot="tabs-tab"]:active {
+	transform: scale(0.97);
+}
+
+.promo-folder-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.125rem;
+	height: 1.125rem;
+	padding-inline: 0.3125rem;
+	border-radius: 999px;
+	font-size: 0.6875rem;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	color: var(--muted-foreground);
+	background: color-mix(in oklch, var(--foreground) 6%, transparent);
+	transition:
+		color 150ms ease,
+		background-color 150ms ease;
+}
+
+.promo-folder-notch[data-active="true"] .promo-folder-count {
+	color: var(--foreground);
+	background: color-mix(in oklch, var(--foreground) 11%, transparent);
+}
+
+/* New city's cards fade in instead of teleporting. */
+.promo-folder-panel {
+	opacity: 1;
+	transition: opacity 150ms var(--ease-out);
+}
+
+@starting-style {
+	.promo-folder-panel {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.promo-folder-notch [data-slot="tabs-tab"]:active {
+		transform: none;
+	}
+}
+
+.promo-folder-notch:has(+ .promo-folder-notch[data-active="true"]) {
+	--tail-stroke: transparent;
+}
+
+.promo-folder:has(.promo-folder-notch:first-child[data-active="true"])
+	.promo-folder-body {
+	border-start-start-radius: 0;
 }
 
 .promo-folder-body {
 	position: relative;
 	z-index: 0;
-	padding-block: 1rem;
+	padding-top: 1rem;
+	padding-bottom: 1rem;
 	border: 1px solid var(--folder-stroke);
-	border-start-start-radius: 0;
-	border-start-end-radius: var(--radius-xl);
-	border-end-end-radius: var(--radius-xl);
-	border-end-start-radius: var(--radius-xl);
+	border-radius: var(--radius-xl);
 	background: var(--folder-bg);
 }
 

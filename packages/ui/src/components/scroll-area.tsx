@@ -65,9 +65,9 @@ function readOverflowMask(element: HTMLElement): Mask {
 		clientHeight,
 	} = element;
 	return {
-		top: scrollTop > 0,
+		top: scrollTop > 1,
 		bottom: scrollTop + clientHeight < scrollHeight - 1,
-		left: scrollLeft > 0,
+		left: scrollLeft > 1,
 		right: scrollLeft + clientWidth < scrollWidth - 1,
 	};
 }

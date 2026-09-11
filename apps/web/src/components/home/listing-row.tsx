@@ -13,6 +13,7 @@ import {
 	type HorizontalScrollState,
 } from "@/components/home/horizontal-scroll-row";
 import { SectionHeader } from "@/components/home/section-header";
+import { useFlip } from "@/components/home/use-flip";
 import { ListingCard } from "@/components/search/listing-card";
 import { buildCariSearch } from "@/domain/facets/url";
 import { cityLabels } from "@/domain/kos/labels";
@@ -54,6 +55,8 @@ export function ListingRow({
 	);
 
 	const current = groups.find((group) => group.city === city) ?? groups[0];
+	const navRef = useRef<HTMLDivElement>(null);
+	const prepareFlip = useFlip(navRef);
 
 	if (!current) {
 		return null;
@@ -111,33 +114,49 @@ export function ListingRow({
 				className="promo-folder gap-0"
 				onValueChange={(value) => {
 					const next = groups.find((group) => group.city === value);
-					if (next) {
+					if (next && next.city !== current.city) {
+						prepareFlip();
 						setCity(next.city);
 					}
 				}}
 				value={current.city}
 			>
 				<TabsList
-					className="promo-folder-nav z-10 gap-x-[46px] bg-transparent p-0 [&_[data-slot=tab-indicator]]:hidden"
+					className="promo-folder-nav z-10 w-full min-w-0 justify-start gap-x-0 bg-transparent p-0 [&_[data-slot=tab-indicator]]:hidden"
+					ref={navRef}
 					size="sm"
 				>
-					{groups.map((group) => (
-						<FolderNotch active={group.city === current.city} key={group.city}>
-							<TabsTab className="hover:bg-transparent" value={group.city}>
-								{cityLabels[group.city]}
-							</TabsTab>
-						</FolderNotch>
-					))}
+					{groups.map((group) => {
+						const isActive = group.city === current.city;
+						const label = cityLabels[group.city];
+						const count = group.listings.length;
+
+						return (
+							<FolderNotch active={isActive} key={group.city}>
+								<TabsTab
+									aria-label={`${label}, ${count} kos promo`}
+									className="hover:bg-transparent"
+									value={group.city}
+								>
+									{label}
+									<span aria-hidden="true" className="promo-folder-count">
+										{count}
+									</span>
+								</TabsTab>
+							</FolderNotch>
+						);
+					})}
 				</TabsList>
 				<div className="promo-folder-body">
 					<TabsPanel value={current.city}>
-						<ListingRowScroller
-							key={current.city}
-							listings={current.listings}
-							maskClassName={folderMaskClassName}
-							onScrollStateChange={handleScrollStateChange}
-							scrollRef={scrollRef}
-						/>
+						<div className="promo-folder-panel" key={current.city}>
+							<ListingRowScroller
+								listings={current.listings}
+								maskClassName={folderMaskClassName}
+								onScrollStateChange={handleScrollStateChange}
+								scrollRef={scrollRef}
+							/>
+						</div>
 					</TabsPanel>
 				</div>
 			</Tabs>

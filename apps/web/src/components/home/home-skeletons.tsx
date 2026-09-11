@@ -1,6 +1,7 @@
 import { Skeleton } from "@ibukos/ui/components/skeleton";
 import { cn } from "@ibukos/ui/lib/utils";
 
+import { FolderNotch } from "@/components/home/folder-notch";
 import { SectionHeader } from "@/components/home/section-header";
 
 function ListingCardSkeleton() {
@@ -23,13 +24,17 @@ export function ListingRowSkeleton({ title }: { title: string }) {
 			<SectionHeader title={title} />
 			<div aria-hidden="true" className="promo-folder">
 				<div className="promo-folder-nav">
-					{Array.from({ length: 4 }, (_, index) => (
-						<div className="promo-folder-notch" key={index}>
-							<div className="promo-folder-notch-content p-1">
-								<Skeleton className="h-7 w-16 rounded-md" />
-							</div>
-						</div>
-					))}
+					{Array.from({ length: 4 }, (_, index) => {
+						const isFirst = index === 0;
+
+						return (
+							<FolderNotch active={isFirst} key={index}>
+								<div className="p-1">
+									<Skeleton className="h-7 w-16 rounded-md" />
+								</div>
+							</FolderNotch>
+						);
+					})}
 				</div>
 				<div className="promo-folder-body">
 					<div className="flex gap-4 overflow-hidden px-4">

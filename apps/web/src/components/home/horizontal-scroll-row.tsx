@@ -125,8 +125,8 @@ export const HorizontalScrollRow = forwardRef<
 				maskHeight={maskHeight}
 				onScrollStateChange={handleScrollStateChange}
 				viewportClassName={cn(
+					"scroll-px-4",
 					snap && "snap-x snap-mandatory",
-					edgeToEdge && "scroll-px-4",
 				)}
 				viewportRef={viewportRef}
 			>
