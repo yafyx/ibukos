@@ -1,6 +1,6 @@
 # Ibukos
 
-A Mamikos-style kos (boarding house) finder, built for a frontend take-home that asks one thing: how well can you use AI to ship an interface? The brief is in [task.md](./task.md). The minimum was the home page. I went further because the search page had the interesting decisions.
+A Mamikos-style kos (boarding house) finder, built for a frontend take-home that asks one thing: how well can you use AI to ship an interface? The brief is in [task.md](./task.md). Inspired by Mamikos, not a 1:1 pixel clone. The brief's expected effort is 3–5 hours of active coding; the home page alone was shippable inside that window. I went further, especially `/cari`, because the search page had the interesting decisions. Optional scope, love of the game, craft depth — not proof of failed efficiency or being slow.
 
 - Demo: [ibukos.yfyx.dev](https://ibukos.yfyx.dev)
 - Stack: [TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) components on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev)
@@ -86,7 +86,9 @@ BETTER_AUTH_URL=http://localhost:3001
 
 ## How I worked with AI
 
-Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
+Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, mostly polishing `/cari`. The extra time is that optional stretch, not the home page missing the 3–5 hour window.
+
+A near-1:1 home via Figma capture or a browser extension is a short path. Could be under an hour. I skipped that on purpose and spent the hours on `/cari` URL-state (typed search params) and the map island (Leaflet, client-only) instead.
 
 What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner." One issue per message. Broad prompts like "make this less generic" got broad, generic output and three or four follow-ups.
 
