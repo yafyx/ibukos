@@ -9,17 +9,15 @@ A Mamikos-style kos (boarding house) finder, built for a frontend take-home that
 
 Everything is in Indonesian, like the original. Listing data is hardcoded in `apps/web/src/domain/kos/catalog.ts` (30 kos, 7 cities), so there is no backend.
 
-| Route                                                                  | What it does                                                                                                                                                                                                                                                                              |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                                                                    | Home. [Command palette](https://en.wikipedia.org/wiki/Command_palette) search in the hero, promo folders by city, featured listings, popular areas and campuses, owner banner, footer with a dark mode switch.                                                                            |
-| `/cari`                                                                | Search. Zumper-style split list and map. A [segmented control](https://developer.apple.com/design/human-interface-guidelines/segmented-controls) picks List / Split / Map on desktop; a floating one picks List / Map on mobile. Filters, sort, and committed map bounds live in the URL. |
-| `/kos/$slug`                                                           | Listing detail. Photo carousel, facts, facilities, rules, an availability form with a date picker, a location map.                                                                                                                                                                        |
-| `/kota/$city`, `/kota/$city/$gender`, `/kampus/$slug`, `/tipe/$gender` | [Programmatic landing pages](https://ahrefs.com/blog/programmatic-seo/) generated from the catalog. Each links into `/cari`.                                                                                                                                                              |
-| `/og/*`, `/sitemap.xml`, `/robots.txt`                                 | [Open Graph](https://ogp.me) images rendered with [Takumi](https://takumi.kane.tw/), plus the crawler files.                                                                                                                                                                              |
+| Route                                                                  | What it does                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                                    | Home. [Command palette](https://en.wikipedia.org/wiki/Command_palette) search in the hero, promo folders by city, featured listings, popular areas and campuses, owner banner, footer with a dark mode switch.                                                                                                                                                                                             |
+| `/cari`                                                                | Search. A [Zumper](https://www.zumper.com)-style [split view](https://developer.apple.com/design/human-interface-guidelines/split-views) of list and map. A [segmented control](https://developer.apple.com/design/human-interface-guidelines/segmented-controls) picks List / Split / Map on desktop; a floating one picks List / Map on mobile. Filters, sort, and committed map bounds live in the URL. |
+| `/kos/$slug`                                                           | Listing detail. [Carousel](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/), facts, facilities, rules, an availability form with a [date picker](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/), a location map.                                                                                                                                                    |
+| `/kota/$city`, `/kota/$city/$gender`, `/kampus/$slug`, `/tipe/$gender` | [Programmatic landing pages](https://ahrefs.com/blog/programmatic-seo/) generated from the catalog. Each links into `/cari`.                                                                                                                                                                                                                                                                               |
+| `/og/*`, `/sitemap.xml`, `/robots.txt`                                 | [Open Graph](https://ogp.me) images rendered with [Takumi](https://takumi.kane.tw/), plus the crawler files.                                                                                                                                                                                                                                                                                               |
 
 `/login` and `/dashboard` are [Better-T-Stack](https://better-t-stack.dev) scaffold leftovers. [Better Auth](https://www.better-auth.com) is wired in with no database, so they do nothing useful. Removing them wasn't worth the time.
-
-## Interactions worth a look
 
 ### The search box moves into the header
 
@@ -33,7 +31,7 @@ See `apps/web/src/components/search/search-dock.tsx` and the `.morph` rules in `
 
 ![Command dialog](docs/screenshots/search-dialog.gif)
 
-A coss [`Command`](https://coss.com/ui/docs/components/command) dialog on Base UI's Autocomplete. Empty state is a browse panel: "Cari di lokasi sekitar saya" (geolocation, snapped to the nearest catalog city), popular campuses as chips, then Kampus / Area / Stasiun & Halte tabs with a city accordion under each. Typing filters. Enter with free text goes to `/cari?q=`. On phones the dialog is full-screen.
+A coss [`Command`](https://coss.com/ui/docs/components/command) dialog on Base UI's Autocomplete. Empty state is a browse panel: "Cari di lokasi sekitar saya" ([geolocation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API), snapped to the nearest catalog city), popular campuses as [chips](https://m3.material.io/components/chips/overview), then Kampus / Area / Stasiun & Halte tabs with a city [accordion](https://www.w3.org/WAI/ARIA/apg/patterns/accordion/) under each. Typing filters. Enter with free text goes to `/cari?q=`. On phones the dialog is full-screen.
 
 ### Save chip
 
@@ -45,30 +43,25 @@ A Base UI `Toggle` persisted to [`localStorage`](https://developer.mozilla.org/e
 
 ![Switching promo folders by city](docs/screenshots/promo-folder.gif)
 
-You can't draw an S-curve corner in CSS. I learned that from Emil Kowalski's [Devouring Details notch](https://devouringdetails.com/prototypes/nextjs-dev-tools): export the tail as SVG and glue it to a normal HTML box so the label can grow without breaking the curve. I didn't drop his overlay in. I rebuilt the idea for "Kos yang lagi promo", where seven city tabs have to read as one folder and the count expands when a city is active.
+You can't draw an S-curve corner in CSS. I learned that from Emil Kowalski's [Devouring Details notch](https://devouringdetails.com/prototypes/nextjs-dev-tools): export the tail as SVG and glue it to a normal HTML box so the label can grow without breaking the curve. I didn't drop his overlay in. I rebuilt the idea for "Kos yang lagi promo", where seven city tabs have to read as one folder.
 
-Each city is a `FolderNotch`. The HTML box holds the name and count. An SVG S-curve is glued to the right, and the next city overlaps that tail by 16px so the top stroke looks continuous. The active city fills in, gets a darker outline, rises 4px, and grows a longer S on the right. If it isn't first, a mirrored S appears on its left, and the city before it hides its own tail so the two curves don't meet in a valley. The neighbour's top line over each crook is HTML, pinned to the row top, so it stays put when the active city rises.
-
-Switching cities changes widths, overlaps, and which tails exist. Labels must not stretch while that happens. `useFlip` runs [FLIP](https://aerotwist.com/blog/flip-your-animations/). It snapshots every `[data-flip]` node before the state change, inverts the delta with `translate` and `scale` after layout, and plays back to identity in 200ms. Boxes marked `data-flip="x"` only slide; the fill and tails are the parts that stretch. Mid-flight switches cancel the running animations and snapshot from the visual position, so you can spam the tabs without a jump. The cards fade in with `@starting-style`. The count is `tabular-nums` so "2" and "1" don't shove the name around.
+Switching cities changes widths and overlaps. Labels must not stretch while that happens, so `useFlip` runs [FLIP](https://aerotwist.com/blog/flip-your-animations/). Mid-flight switches cancel and snapshot from the visual position, so you can spam the tabs without a jump. The cards fade in with [`@starting-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/@starting-style). The count is [`tabular-nums`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-numeric) so "2" and "1" don't shove the name around.
 
 The twenty messages in the session were almost all this geometry. Red rulers on screenshots, "still a gap," me dictating which tail to hide.
 
-### Search page: list, map, and the toggle
+### Search page
 
 | Desktop split                                                 | Mobile                                                                |
 | ------------------------------------------------------------- | --------------------------------------------------------------------- |
 | ![Toggle List / Split / Map](docs/screenshots/cari-views.gif) | ![Mobile list with floating toggle](docs/screenshots/cari-mobile.png) |
 
-- Daftar / Gabungan / Peta is a `ToggleGroup`. `commitView` in `cari/workspace.tsx` wraps the state change and the navigate in `startTransition`, tagged with [`addTransitionType("cari-view")`](https://react.dev/reference/react/addTransitionType). The `cari-list` and `cari-map` `ViewTransition`s map that type to `.layout`, so the panes resize over `--duration-move` and nothing else animates. Every other update is `default="none"`.
-- Pins are Leaflet [`DivIcon`](https://leafletjs.com/reference.html#divicon)s showing price, colored by gender with the same chip classes as the cards. Card hover highlights the pin and pin hover highlights the card through one `useReducer` in `domain/cari/highlight.ts`. Clicking a pin scrolls its card into view.
-- Panning does not re-query. "Cari di area ini" commits the current bounds to the URL as `bounds=`, so back and forward work.
-- Under 64rem the split collapses to a list with a floating Daftar / Peta control. `domain/cari/layout.ts` resolves what `view=split` means on a narrow viewport.
+Daftar / Gabungan / Peta. The panes resize; nothing else animates. Pins are Leaflet [`DivIcon`](https://leafletjs.com/reference.html#divicon)s with the price, colored by gender like the cards. Hover a card or a pin and the other highlights. Click a pin and its card scrolls into view. Panning does not re-query. "Cari di area ini" writes the bounds into the URL, so back and forward work. Under 64rem it becomes a list with a floating Daftar / Peta control.
 
 ### Listing detail
 
 ![Listing detail](docs/screenshots/kos-detail.gif)
 
-[Embla](https://www.embla-carousel.com) carousel with a thumbnail strip and a "Lihat semua" count. With a mouse, the next arrow is hidden until you hover the image, then fades in as a full-height gradient at the edge. It unmounts on the last slide rather than rendering disabled. On touch it stays visible, and you can swipe. The sticky action card has the price, an availability form with a date picker, WhatsApp, copy link, and report.
+[Embla](https://www.embla-carousel.com) carousel with a thumbnail strip. On a mouse, the next arrow stays hidden until you hover the image, then fades in as a full-height gradient. It unmounts on the last slide rather than sitting there disabled. On a phone it stays visible, and you can swipe. The [sticky](https://developer.mozilla.org/en-US/docs/Web/CSS/position#sticky) card has the price, an availability form, WhatsApp, copy link, and report.
 
 ## Running it
 
@@ -95,7 +88,7 @@ BETTER_AUTH_URL=http://localhost:3001
 
 Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
 
-What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner" or "only show the next button when I hover the image part." One issue per message. Broad prompts like "make this less generic" got broad, generic output and three or four follow-ups.
+What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner." One issue per message. Broad prompts like "make this less generic" got broad, generic output and three or four follow-ups.
 
 After the CLI switch, [react-grab](https://github.com/aidenybai/react-grab) saved me the most. DEV-only import in `__root.tsx`. I clicked the broken bit in the page, copied the component context, pasted it into the CLI. Same "this corner" habit as attaching a DOM node in the GUI, except I didn't sit around waiting for Cursor to open.
 
@@ -103,7 +96,7 @@ Where the agent saved the most time:
 
 - Scaffolding. Better-T-Stack gave me the monorepo, TanStack Start, Tailwind, Biome, and Turborepo in one command. Adding coss and shadcn components to `packages/ui` was another.
 - The search page. Before touching `/cari`, the agent mapped the existing search domain (URL parsing, facets, filtering). Then four agents each proposed an architecture and a fifth scored them against my rubric, [LLM-as-a-judge](https://arxiv.org/abs/2306.05685) style. The rubric asked "does `searchListings` stay pure?" and "is the live map camera kept off the URL?" The winner shipped.
-- SEO. Landing pages, JSON-LD, sitemap, and OG routes from one prompt plus a follow-up to render with Takumi.
+- SEO. Landing pages, [JSON-LD](https://json-ld.org), sitemap, and OG routes from one prompt plus a follow-up to render with Takumi.
 - Tests. Search query parsing, catalog grouping, SEO page generation. I have a standing rule against tautological tests, so these check round-trips and edge cases, not that a constant equals itself.
 
 Where it went sideways:
@@ -131,40 +124,23 @@ Skills I attached by hand:
 | `find-animation-opportunities`                                                                                           | 2      | Motion audit.                                                                                    |
 | `tanstack-start`, `thermo-nuclear-code-quality-review`, `cloudflare`, `technical-writing`, `term-radar`, `anthropic-art` | 1 each | Docs, one code review, deploy, and a brand illustration I threw away for my own.                 |
 
-The agent also read skills on its own: `better-ui` (17), `better-layout` (14), `better-accessibility` (12), `architect` (10), and the pstack principle files (`model-the-domain`, `boundary-discipline`, `prove-it-works`, and others) that `poteto-mode` loads before nontrivial changes.
+The agent also read skills on its own: `better-ui` (17), `better-layout` (14), `better-accessibility` (12), `architect` (10), and the pstack principle files that `poteto-mode` loads before nontrivial changes.
 
-The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. Later polish chats mixed in Composer 2.5 Fast and Auto (`default` in the usage export). I asked for 21 subagent launches. `inherit` is not a model: it means "whatever the parent is on," and all 12 of those came from the Grok 4.6 High `/cari` chat, so they ran Grok 4.6 High. The one `fast` launch was an Explore subagent; Cursor's Explore default billed it as Composer 2.5 Fast.
-
-What Cursor actually billed, 267 requests, all marked included in Pro+:
-
-| Model                          | Requests | Input     | Output    | Cache write | Cache read | Listed cost |
-| ------------------------------ | -------- | --------- | --------- | ----------- | ---------- | ----------- |
-| Cursor Grok 4.6 High           | 111      | 10.5M     | 1.54M     | 0           | 186M       | $123.76     |
-| Composer 2.5 Fast              | 101      | 2.68M     | 564k      | 0           | 61.3M      | $46.39      |
-| Claude Fable 5.1 Thinking High | 14       | 492       | 215k      | 757k        | 38.8M      | $29.89      |
-| Cursor Grok 4.6 Medium Fast    | 1        | 548k      | 25k       | 0           | 6.68M      | $9.17       |
-| Cursor Grok 4.6 Extra High     | 11       | 755k      | 163k      | 0           | 9.81M      | $7.39       |
-| Auto (`default`)               | 14       | 632k      | 55k       | 0           | 4.23M      | $3.71       |
-| Cursor Grok 4.6 Medium         | 10       | 322k      | 23k       | 0           | 2.25M      | $1.91       |
-| GPT-5.6 Luna Extra High        | 4        | 168       | 9k        | 120k        | 6.12M      | $0.16       |
-| GPT-5.6 Luna Medium            | 1        | 39        | 5k        | 34k         | 355k       | $0.02       |
-| **Total**                      | **267**  | **15.4M** | **2.60M** | **0.91M**   | **315M**   | **$222.40** |
-
-$222.40 is Cursor's listed price for those tokens. None of it went to on-demand; Pro+ ate it. Cache reads are most of the burn, which is how these long agent threads work.
+The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. Later polish chats mixed in Composer 2.5 Fast and Auto. I asked for 21 subagent launches. 267 requests, all marked included in Pro+. Listed cost $222.40. None of it went to on-demand; Pro+ ate it. Cache reads are most of the burn, which is how these long agent threads work. Grok 4.6 High was 111 of those requests. Composer 2.5 Fast was 101.
 
 ### Takes
 
 Four things I'd tell someone doing this test next week.
 
-**Supervision is the job.** Most of the orchestration here (`poteto-mode`, `architect`, `arena`, the principle files) is lauren's [pstack](https://x.com/poteto/status/2097732320606507506). She posted part 2 of the guide the day before I started and pitched it as "the art of supervising someone smarter than you." I was skeptical of the framing and then spent nine hours living it. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks "off" by two pixels. My job was that second half. Neither of us ships this alone in a night, and pretending otherwise in either direction wastes time.
+**Supervision is the job.** Most of the orchestration here (`poteto-mode`, `architect`, `arena`, the principle files) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you." I was skeptical of that framing and then spent nine hours living it. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks "off" by two pixels. My job was that second half.
 
-**Plan by pointing.** I have `grill-me` installed. Its description is "a relentless interview to sharpen a plan or design." In 181 prompts I invoked it zero times. What I did invoke, through `poteto-mode`, was `never-block-on-the-human`, which the agent read eight times and which says, roughly, stop asking and go.
+**Plan by pointing.** I have `grill-me` installed. Its description is "a relentless interview to sharpen a plan or design." I didn't want that for a UI task. Capek ditanyain, tired of being asked. In 181 prompts I invoked it zero times. What I did invoke, through `poteto-mode`, was `never-block-on-the-human`. The agent read it eight times, and it says, roughly, stop asking and go. She wrote that she plans through code, and that prototypes let agents "answer their own questions with empirical evidence instead of waiting for my input."
 
-That's not laziness, or not only. For UI work I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with red rulers drawn on it. Once I was on the CLI I used react-grab to grab the node instead of describing the tree. An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. The exception is architecture. For `/cari` I did want the plan interrogated, so I had four agents propose designs and one grade them, and I wrote the rubric. Grill the structure, not the pixels.
+For UI work I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with red rulers drawn on it. Once I was on the CLI I used react-grab to grab the node instead of describing the tree. An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. She wrote that abstract plans "only give you the illusion of progress." The exception is architecture. For `/cari` I did want the plan interrogated, so I had four agents propose designs and one grade them, and I wrote the rubric. Grill the structure, not the pixels.
 
-**Verify with your eyes.** The agent kept wanting Playwright, to drive a browser and screenshot its own work. I said "lemme verify manually", or some misspelling of it, eight times, and then "never run browser again." Partly because it screenshotted the wrong site. Mostly because for alignment and motion, looking is faster than any harness it could set up, and the harness itself becomes a thing to debug. The one place automation earned its keep was the domain layer: 25 unit tests on search parsing, catalog grouping, and canonical rules, which are exactly the things eyes are bad at.
+**Verify with your eyes.** She wrote that if an agent can't verify its own work, "nothing else matters. You remain the bottleneck." The agent kept wanting Playwright, to drive a browser and screenshot its own work. I said "lemme verify manually", or some misspelling of it, eight times, and then "never run browser again." Partly because it screenshotted the wrong site. Mostly because for alignment and motion, looking is faster than any harness it could set up, and the harness itself becomes a thing to debug. The one place automation earned its keep was the domain layer: 25 unit tests on search parsing, catalog grouping, and canonical rules, which are exactly the things eyes are bad at.
 
-**Spend on the judge.** The model policy from the first prompt held all session: cheap fast workers write, one expensive model reads and scores. Grok only ever read. It graded four architecture candidates against the rubric and picked the one that shipped. `/cari` is the best-structured part of the repo because of that one review, and it cost a fraction of what running the whole build on the expensive model would have. If I only had budget for one expensive call, I'd spend it on the judge again.
+**Spend on the judge.** She runs competing designs through a judge on a different model, then implements against the sketch. The model policy from the first prompt held all session: cheap fast workers write, one expensive model reads and scores. Grok only ever read. It graded four architecture candidates against the rubric and picked the one that shipped. `/cari` is the best-structured part of the repo because of that one review, and it cost a fraction of what running the whole build on the expensive model would have. If I only had budget for one expensive call, I'd spend it on the judge again.
 
 ## Decisions worth explaining
 
@@ -180,70 +156,36 @@ That's not laziness, or not only. For UI work I don't have the plan until I see 
 
 **[Skeleton screens](https://www.nngroup.com/articles/skeleton-screens/) instead of spinners.** The home page renders static sections at once and skeletons only the data-driven rows. Same for the map while Leaflet loads.
 
-**Embla for carousels.** Most users will be on phones, and Embla's touch handling is the part I didn't want to write.
+**Embla for carousels.** Most users will be on phones. I didn't want to write the swipe.
 
 **Light by default, dark mode in the footer.** Light matches Mamikos. The header is for search and navigation, so the theme switch lives in the footer.
 
 ## SEO without Next.js
 
-A listing site lives on search traffic, and Next.js is the default answer: Metadata API, `sitemap.ts`, `robots.ts`, `next/og`, all in the box. I picked TanStack Start anyway, for `/cari`. That page is a URL with 13 typed search params (city, gender, price range, facilities, sort, map bounds, view), and TanStack Router validates every one at the route boundary. That mattered more than free metadata helpers, and I bet the agent could rebuild the SEO layer in an hour. It took about forty minutes.
+A listing site lives on search traffic, and Next.js is the default answer: Metadata API, `sitemap.ts`, `robots.ts`, `next/og`, all in the box. I picked TanStack Start anyway, for `/cari`. That page is a URL with 13 typed search params (city, gender, price range, facilities, sort, map bounds, view), and TanStack Router validates every one at the route boundary. That mattered more than free metadata helpers. I bet the agent could rebuild the SEO layer in an hour. It took about forty minutes.
 
 What shipped, all under `apps/web/src/domain/seo/`:
 
-- `seoHead()` builds title, description, robots, canonical, Open Graph, and Twitter tags from one `SeoDocument`. Every route calls it from TanStack's [`head()`](https://tanstack.com/router/latest/docs/framework/react/guide/document-head-management), so meta is server-rendered on first load, not patched in by a client effect.
-- [Structured data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data) as JSON-LD: `Organization`, `WebSite` with a `SearchAction`, `FAQPage` on home, `BreadcrumbList` and [`Apartment`](https://schema.org/Apartment) with an IDR `Offer` on listings, `CollectionPage` + `ItemList` on landings.
-- Landing pages at `/kota/$city`, `/kota/$city/$gender`, `/kampus/$slug`, `/tipe/$gender`. Crawlable, static-looking versions of common searches.
-- A [canonical](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) policy for `/cari`, the usual [faceted navigation](https://developers.google.com/search/docs/crawling-indexing/crawling-managing-faceted-navigation) problem. A bare search is indexable. A search that maps to a landing (city, city plus gender, a campus) gets [`noindex, follow`](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag) and a canonical to that landing, so Google sees one URL per intent instead of every filter permutation. Anything with extra filters is `noindex`.
-- [`sitemap.xml`](https://www.sitemaps.org/protocol.html) (55 URLs, generated from the catalog) and `robots.txt` as server route handlers. `/login`, `/dashboard`, `/api/` disallowed.
-- Open Graph images at `/og/*`. See [Open Graph images](#open-graph-images) below.
-- A [web manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest), `lang="id"`, `og:locale` `id_ID`, preconnects for Google Fonts.
+- `seoHead()` builds title, description, robots, canonical, Open Graph, and Twitter tags from one `SeoDocument`. Every route calls it from TanStack's [`head()`](https://tanstack.com/router/latest/docs/framework/react/guide/document-head-management).
+- [JSON-LD](https://json-ld.org): `Organization`, `WebSite` with a `SearchAction`, `FAQPage` on home, `BreadcrumbList` and [`Apartment`](https://schema.org/Apartment) with an IDR `Offer` on listings, `CollectionPage` + `ItemList` on landings.
+- A [canonical](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) policy for `/cari`. A search that maps to a landing gets [`noindex, follow`](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag). Extra filters stay unindexed.
+- [`sitemap.xml`](https://www.sitemaps.org/protocol.html) (55 URLs) and `robots.txt`. OG images at `/og/*`. A [web manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest), `lang="id"`, `og:locale` `id_ID`.
 
-The agent did most of this from one prompt ("now maximize the SEO for this site") plus the Takumi swap. I reviewed the canonical rules by hand because they're easy to get subtly wrong. Eight unit tests cover them: city-only search canonicalizes to the landing and is not indexed, bare `/cari` stays indexed, facility filters stay on `/cari` unindexed, the JSON-LD offer uses the promo price when there is one.
+I reviewed the canonical rules by hand. Eight unit tests cover them: city-only search canonicalizes to the landing and is not indexed, bare `/cari` stays indexed, facility filters stay on `/cari` unindexed, the JSON-LD offer uses the promo price when there is one.
 
-Missing versus Next.js: no [prerender](https://tanstack.com/start/latest/docs/framework/react/guide/prerendering) of the landings (they render per request), no [`hreflang`](https://developers.google.com/search/docs/specialty/international/localized-versions) (one language, so not yet), and no [Lighthouse](https://developer.chrome.com/docs/lighthouse) run. First things to check with real traffic.
-
-### Open Graph images
-
-Paste a link in WhatsApp or X and the preview card comes from [Open Graph](https://ogp.me) tags. Every indexable page points at a PNG the server renders on demand, not a file sitting in `public/`.
-
-The routes mirror the page types:
-
-| Route                    | Card             |
-| ------------------------ | ---------------- |
-| `/og`                    | Home             |
-| `/og/kos/$slug`          | Listing          |
-| `/og/kota/$city`         | City landing     |
-| `/og/kota/$city/$gender` | City plus gender |
-| `/og/kampus/$slug`       | Campus landing   |
-| `/og/tipe/$gender`       | Gender landing   |
-| `/og/cari`               | Search           |
-
-`seoHead()` picks the image URL with `ogImagePath()`. `/` maps to `/og`. Every other path gets `/og` prepended, so `/kos/kos-mawar-ugm` becomes `https://ibukos.yfyx.dev/og/kos/kos-mawar-ugm`.
-
-Rendering lives in `domain/seo/og-response.tsx`. It loads Figtree once through Takumi's `googleFonts()`, resolves an absolute URL for `public/brand/ibukos-ibu.png` from the request origin, and passes both into `OgCard`. [Takumi](https://takumi.kane.tw/) turns the JSX into a 1200×630 PNG. I picked it over [Satori](https://github.com/vercel/satori) because it ships with the same React-to-image model and the agent already had it wired. Responses cache for an hour via [`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control).
-
-The card is `domain/seo/og-card.tsx`. I copied Mamikos's layout: full green background (`#247a4a`), white type, the ibu logo and "Ibukos" in the top right. Listing cards put the first photo on the left in a rounded frame with a shadow, the same slot Mamikos uses for its phone mockup. Text sits on the right: gender badge when it applies, title, subtitle, price. Home, city landings, and search skip the photo column.
-
-Card data is in `domain/seo/og-model.ts`. One function per page type returns an `OgCardModel` (kicker, title, subtitle, optional badge, photo, price). Listing cards pull the first photo and promo price from the catalog.
-
-Examples:
+Paste a link in WhatsApp or X and the preview card comes from Open Graph tags. Every indexable page points at a PNG the server renders on demand. I copied Mamikos's layout: full green (`#247a4a`), white type, the ibu logo and "Ibukos" in the top right. Listing cards put the first photo on the left. [Takumi](https://takumi.kane.tw/) turns the JSX into a 1200×630 PNG. I picked it over [Satori](https://github.com/vercel/satori) because it ships with the same React-to-image model and the agent already had it wired.
 
 | Home                                          | Listing                                             |
 | --------------------------------------------- | --------------------------------------------------- |
 | ![Home OG card](docs/screenshots/og-home.png) | ![Listing OG card](docs/screenshots/og-listing.png) |
 
-Preview locally at `http://localhost:3001/og` or `/og/kos/kos-mawar-ugm`. To sanity-check tags and the X card, paste a URL into [check-site-meta](https://check-site-meta-alfonsusacs-projects.vercel.app).
-
-One thing I checked while writing this: Mamikos still ships a relative `og:image` (`/assets/og/og_kost_v3.jpg`). X wants an absolute URL, so the checker drops the image and falls back to summary with no image:
+Mamikos still ships a relative `og:image`. X wants an absolute URL, so the checker drops the image. Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production tags look like `https://ibukos.yfyx.dev/og`.
 
 ![Mamikos X preview missing its OG image](docs/screenshots/og-mamikos-x-checker.jpg)
-
-Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production tags look like `https://ibukos.yfyx.dev/og`. Local dev without `VITE_SITE_URL` still emits `/og`, same failure mode, which is why the deploy script sets the origin at build time.
 
 ## What I'd do with more time
 
 Real coordinates and a real data source. Working auth, or remove it. [Virtualize](https://tanstack.com/virtual) the `/cari` list once the catalog passes 30.
 
-The rest is continuous improvement like the promo folder: overlay on, drag the radius, watch the morph, stop when it looks right. Twenty messages for that curve was enough for a take-home. With more time I'd keep the loop and ship the debug tooling so the next crook doesn't cost another night.
-
+The rest is continuous improvement like the promo folder.
 ![Live debug overlay while morphing a tab cutout](docs/screenshots/tab-cutout-debug.gif)
