@@ -19,9 +19,9 @@ import { prefersReducedMotion, pressable } from "@/lib/motion";
 const slideOutline =
 	"outline outline-1 outline-black/10 -outline-offset-1 dark:outline-white/10";
 
-/** Source promos are 540×720 (3:4). Size the slide from the image, not the viewport. */
-const PROMO_WIDTH = 540;
-const PROMO_HEIGHT = 720;
+/** Mamikos promo art is ~817×346 (wide banner), not the 540×720 cache suffix. */
+const PROMO_WIDTH = 817;
+const PROMO_HEIGHT = 346;
 
 export function PromoBanners() {
 	if (promoSlides.length === 0) {
@@ -98,7 +98,7 @@ function PromoTile({ index, slide }: { index: number; slide: PromoSlide }) {
 			<KosImage
 				alt={slide.title}
 				className={cn(
-					"block h-auto w-[min(84vw,21rem)] sm:w-[20rem] md:w-[21rem] lg:w-[22rem]",
+					"block aspect-817/346 h-auto w-[min(84vw,21rem)] object-cover sm:w-[20rem] md:w-[21rem] lg:w-[22rem]",
 					slideOutline,
 				)}
 				decoding={index === 0 ? "sync" : "async"}

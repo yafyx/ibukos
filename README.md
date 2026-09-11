@@ -1,65 +1,137 @@
 # Ibukos
 
-A kos finder inspired by Mamikos. Built for the Mamikos FE take-home. How well can you use AI to ship an interface? I shipped that home page inside the 3-5 hour window, then spent another time on the rest of the search, listing detail pages, city and campus landing pages, and the small interaction details that connect them.
+> How well can you use AI to build frontend products effectively and efficiently?
 
-- Demo: [ibukos.yfyx.dev](https://ibukos.yfyx.dev)
-- Stack: [TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) components on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev)
+A kos finder inspired by Mamikos. Take-home in `[task.md](./task.md)`. [Demo](https://ibukos.yfyx.dev).
 
-## What's here
+[TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev).
 
-| Route                                                                  | What it does                                                                                                                                                                                                                                                                                                                                                                                               |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                                                                    | Home. [Command palette](https://en.wikipedia.org/wiki/Command_palette) search in the hero, promo folders by city, featured listings, popular areas and campuses, owner banner, footer with a dark mode switch.                                                                                                                                                                                             |
-| `/cari`                                                                | Search. A [Zumper](https://www.zumper.com)-style [split view](https://developer.apple.com/design/human-interface-guidelines/split-views) of list and map. A [segmented control](https://developer.apple.com/design/human-interface-guidelines/segmented-controls) picks List / Split / Map on desktop; a floating one picks List / Map on mobile. Filters, sort, and committed map bounds live in the URL. |
-| `/kos/$slug`                                                           | Listing detail. [Carousel](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/), facts, facilities, rules, an availability form with a [date picker](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/), a location map.                                                                                                                                                    |
-| `/kota/$city`, `/kota/$city/$gender`, `/kampus/$slug`, `/tipe/$gender` | [Programmatic landing pages](https://ahrefs.com/blog/programmatic-seo/) generated from the catalog. Each links into `/cari`.                                                                                                                                                                                                                                                                               |
-| `/og/*`, `/sitemap.xml`, `/robots.txt`                                 | [Open Graph](https://ogp.me) images rendered with [Takumi](https://takumi.kane.tw/), plus the crawler files.                                                                                                                                                                                                                                                                                               |
+I shipped the home page inside the 3–5 hour window. Everything after that was optional. I kept going because I enjoy building this kind of thing: search, listing detail, city and campus landings, the small interaction details that connect them. The brief asks for a clone inspired by Mamikos. I read that as the same product space, with room to make my own calls.
 
-`/login` and `/dashboard` are [Better-T-Stack](https://better-t-stack.dev) scaffold leftovers. [Better Auth](https://www.better-auth.com) is wired in with no database, so they do nothing useful. Removing them wasn't worth the time.
+`/login` and `/dashboard` are [Better-T-Stack](https://better-t-stack.dev) leftovers. [Better Auth](https://www.better-auth.com) is wired with no database. Removing them wasn't worth the time.
 
-### The search box moves into the header
+## On How I used the agent
 
-Scroll past the hero and the search box reappears in the header. The browser animates the move. This is a [shared element transition](https://developer.chrome.com/docs/web-platform/view-transitions/same-document) on the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API), driven by React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition).
+I started with [Better-T-Stack](https://better-t-stack.dev), the CLI that scaffolds a TypeScript monorepo. Mine came with TanStack Start, Tailwind, Biome, Turborepo, and Better Auth. Then [shadcn/create](https://ui.shadcn.com/create) for the UI. The agent sliced the brief and we iterated in the browser. **I assumed I could get a 1:1 home from Figma capture extensions in under an hour, but skipped that route on purpose.**
+
+Cursor GUI until the screen recording chewed the laptop. Then Cursor CLI inside Zed. Nearly every change still went through the agent. I steered, checked the browser, and pushed back.
+
+What worked was pointing at one element and saying what's wrong. In the GUI I used [Design Mode](https://cursor.com/docs/agent/design-mode). Click an element in the running app, prompt against it. After the CLI switch, [react-grab](https://github.com/aidenybai/react-grab) did the same job. Click the broken bit, paste the component context, keep going.
+
+Where the agent saved the most time:
+
+- Opening chat. After [Better-T-Stack](https://better-t-stack.dev), I asked it to make a site "inspired or better than mamikos.com named ibukos," with [coss](https://coss.com/ui) and the shadcn registry, light as the default, dark switch in the footer, Hugeicons, Embla. Workers on Composer. Grok 4.6 High only for judging. Then "implement all available coss ui components," then "i mean not use all of components but always make use the coss ui components."
+- `/cari`. I ran this through [pstack](#on-supervision-is-the-job) (`/poteto-mode`). Copy [Zumper](https://www.zumper.com/apartments-for-rent/san-francisco-ca), Leaflet, better than Mamikos, `/emil-design-eng` always, this branch. Next message. "dont use cua dirver." I didn't want a computer-use agent driving the browser. What happened next (map the search domain, four architecture candidates, one [LLM-as-a-judge](https://arxiv.org/abs/2306.05685)) is in that section. The winner shipped.
+- SEO. "now maximizes the seo for this sites." Then "dont verify the output." Then "use [takumi.kane.tw](https://takumi.kane.tw/) for OG images." Landings, [JSON-LD](https://json-ld.org), sitemap, OG routes came out of that.
+
+Where it went sideways:
+
+- First home. "the current sites layout is soulles. and not like mamikos.com at all. u might wanted to screenshoot the page first using [firecrawl](https://www.firecrawl.dev)." I meant Mamikos and Zumper. It opened [Cursor's browser](https://cursor.com/docs/agent/tools/browser) on `localhost:3001` and ran `browser_take_screenshot` (full page) on our home. [Firecrawl](https://www.firecrawl.dev) CLI (`firecrawl scrape --full-page-screenshot`) did hit the references in the background. "why did u screenshoot our own sites?"
+- Command. `/coss` to replace the hero search. Base UI lost `ComboboxGroupContext`. Fade on the rounded corner, padding, the search icon. Several more rounds.
+- [Playwright](https://playwright.dev). Agents kept reaching for it to verify layout, and they always wanted to download Google Chrome (`google-chrome`, Chromium). I don't use Chrome. I use Dia. On `/cari` I said "dont install playwright or chromium, remove it." Later, "never run browser again."
+
+Skills I used:
+
+- `emil-design-eng`. Motion, hover, the polish bar on UI prompts.
+- `better-interface`. Layout, a11y, type, color, copy. The judge after a revamp.
+- `coss` / `coss-particles`. Component patterns from the coss registry.
+- `animate` / `find-animation-opportunities`. What to move, and how.
+- `poteto-mode`. pstack .
+- `no-ai-slop` / `human-writing`. Copy passes.
+- `tanstack-start`. 
+- `thermo-nuclear-code-quality-review`. One code review.
+- `cloudflare`. Deploy.
+
+The agent also pulled `better-ui`, `better-layout`, and `better-accessibility` on its own.
+
+## On supervision is the job
+
+Most of the orchestration (`poteto-mode`, `architect`, `arena`) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you." First time I used it, I was working in a git worktree. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks off by two pixels. My job was that second half.
+
+Through `poteto-mode` I used `never-block-on-the-human`. The agent read that rule eight times. Stop asking and go. Lauren plans through code. Prototypes let agents answer their own questions with evidence instead of waiting. For UI I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with rulers from [Mesurer](https://mesurer.dev/). An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. She wrote that abstract plans only give you the illusion of progress.
+
+Architecture is the exception. For `/cari` I pointed at Zumper and Mamikos and said copy that, better, Leaflet. The architect run wrote the rubric. Four agents proposed. One graded.
+
+If an agent can't verify its own work, nothing else matters. You remain the bottleneck. It kept reaching for Playwright. I said some version of "lemme verify manually" eight times, then "never run browser again." Looking was faster than debugging a harness. The 25 tests cover search parsing, catalog grouping, and canonical rules. The agent wrote those. I kept verifying the UI myself.
+
+Cheap fast workers write, one expensive model reads and scores. Grok only ever read. It graded those four candidates and picked the one that shipped. `/cari` is the best-structured part of the repo because of that review. It cost a fraction of running the whole build on the expensive model. If I only had budget for one expensive call, I'd spend it on the judge again.
+
+## On The interface
+
+Home has a [command palette](https://en.wikipedia.org/wiki/Command_palette) in the hero, then promo folders by city, featured listings, popular areas and campuses. `/cari` is a [Zumper](https://www.zumper.com)-style [split view](https://developer.apple.com/design/human-interface-guidelines/split-views). List on one side, map on the other. A [segmented control](https://developer.apple.com/design/human-interface-guidelines/segmented-controls) switches Daftar / Gabungan / Peta. Filters, sort, and committed map bounds live in the URL. A listing is `/kos/$slug`. `/kota/*`, `/kampus/$slug`, and `/tipe/$gender` are [programmatic SEO](https://ahrefs.com/blog/programmatic-seo) landings into `/cari`. Crawlers get `/og/*`, `/sitemap.xml`, and `/robots.txt`.
+
+Scroll past the hero and the search box docks into the header. The morph is a same-document [view transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API), React `[<ViewTransition>](https://react.dev/reference/react/ViewTransition)`, and `.morph` in `index.css`. Code is in `apps/web/src/components/search/search-dock.tsx`.
 
 ![Search box docking into the header on scroll](docs/screenshots/home-search-dock.gif)
 
-See `apps/web/src/components/search/search-dock.tsx` and the `.morph` rules in `index.css`.
-
-### The search dialog
+The search dialog is a coss `[Command](https://coss.com/ui/docs/components/command)` on Base UI Autocomplete. Empty state is a browse panel: "Cari di lokasi sekitar saya" (geolocation, snapped to the nearest catalog city), campus chips, then Kampus / Area / Stasiun & Halte with a city accordion. Typing filters. Enter with free text goes to `/cari?q=`. Full-screen on a phone.
 
 ![Command dialog](docs/screenshots/search-dialog.gif)
 
-A coss [`Command`](https://coss.com/ui/docs/components/command) dialog on Base UI's Autocomplete. Empty state is a browse panel: "Cari di lokasi sekitar saya" ([geolocation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API), snapped to the nearest catalog city), popular campuses as [chips](https://m3.material.io/components/chips/overview), then Kampus / Area / Stasiun & Halte tabs with a city [accordion](https://www.w3.org/WAI/ARIA/apg/patterns/accordion/) under each. Typing filters. Enter with free text goes to `/cari?q=`. On phones the dialog is full-screen.
-
-### Save chip
+Save is a Base UI `Toggle` in `localStorage`. On save the chip widens, "Disimpan" slides out, holds 1.4s, collapses over 200ms. On remove the icon lifts out over 550ms, no text. Both write to `aria-live`. Same chip on cards, promo folders, and detail.
 
 ![Save chip mid-feedback](docs/screenshots/save-chip.gif)
 
-A Base UI `Toggle` persisted to [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage). On save the chip widens, "Disimpan" slides out from the icon, holds 1.4s, collapses over 200ms. On remove there is no text; the icon lifts out over 550ms. Both write to an [`aria-live`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live) region. Same chip on cards, promo folders, and the detail page.
+You can't draw an S-curve corner in CSS. I learned that from Emil Kowalski's [Devouring Details notch](https://devouringdetails.com/prototypes/nextjs-dev-tools). The tail is an SVG glued to a normal HTML box, so the label can grow without breaking the curve. I rebuilt it for "Kos yang lagi promo", where seven city tabs have to read as one folder.
 
-### Promo folder tabs
+Switching cities changes widths and overlaps. Labels must not stretch while that happens, so `useFlip` runs [FLIP](https://aerotwist.com/blog/flip-your-animations/). Mid-flight switches cancel and snapshot from the visual position, so you can spam the tabs without a jump. Cards fade in with `@starting-style`. The count is `tabular-nums` so "2" and "1" don't shove the name around.
 
 ![Switching promo folders by city](docs/screenshots/promo-folder.gif)
 
-You can't draw an S-curve corner in CSS. I learned that from Emil Kowalski's [Devouring Details notch](https://devouringdetails.com/prototypes/nextjs-dev-tools): export the tail as SVG and glue it to a normal HTML box so the label can grow without breaking the curve. I didn't drop his overlay in. I rebuilt the idea for "Kos yang lagi promo", where seven city tabs have to read as one folder.
+Daftar / Gabungan / Peta. The panes resize; nothing else animates. Pins are Leaflet `DivIcon`s with the price, colored by gender like the cards. Hover a card or a pin and the other highlights. Click a pin and its card scrolls into view. Panning does not re-query. "Cari di area ini" writes the bounds into the URL, so back and forward work. Under 64rem it becomes a list with a floating Daftar / Peta control.
 
-Switching cities changes widths and overlaps. Labels must not stretch while that happens, so `useFlip` runs [FLIP](https://aerotwist.com/blog/flip-your-animations/). Mid-flight switches cancel and snapshot from the visual position, so you can spam the tabs without a jump. The cards fade in with [`@starting-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/@starting-style). The count is [`tabular-nums`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-numeric) so "2" and "1" don't shove the name around.
-
-The twenty messages in the session were almost all this geometry. Red rulers on screenshots, "still a gap," me dictating which tail to hide.
-
-### Search page
 
 | Desktop split                                                 | Mobile                                                                |
 | ------------------------------------------------------------- | --------------------------------------------------------------------- |
 | ![Toggle List / Split / Map](docs/screenshots/cari-views.gif) | ![Mobile list with floating toggle](docs/screenshots/cari-mobile.png) |
 
-Daftar / Gabungan / Peta. The panes resize; nothing else animates. Pins are Leaflet [`DivIcon`](https://leafletjs.com/reference.html#divicon)s with the price, colored by gender like the cards. Hover a card or a pin and the other highlights. Click a pin and its card scrolls into view. Panning does not re-query. "Cari di area ini" writes the bounds into the URL, so back and forward work. Under 64rem it becomes a list with a floating Daftar / Peta control.
 
-### Listing detail
+[Embla](https://www.embla-carousel.com) carousel with a thumbnail strip. On a mouse, the next arrow stays hidden until you hover the image, then fades in as a full-height gradient. It unmounts on the last slide rather than sitting there disabled. On a phone it stays visible, and you can swipe. Sticky card: price, availability, WhatsApp, copy link, report.
 
 ![Listing detail](docs/screenshots/kos-detail.gif)
 
-[Embla](https://www.embla-carousel.com) carousel with a thumbnail strip. On a mouse, the next arrow stays hidden until you hover the image, then fades in as a full-height gradient. It unmounts on the last slide rather than sitting there disabled. On a phone it stays visible, and you can swipe. The [sticky](https://developer.mozilla.org/en-US/docs/Web/CSS/position#sticky) card has the price, an availability form, WhatsApp, copy link, and report.
+## Decisions worth explaining
+
+shadcn/create picked Base UI. Radix is still supported. I followed the default and kept moving.
+
+Search state is in the URL. `parseSearchQuery` validates the search object and feeds `searchListings`. While the map is moving, bounds stay in the map. "Cari di area ini" commits them. Back and forward get a stable search without navigating on every drag.
+
+`map-island.tsx` lazy-loads `map-canvas.tsx` and shows a skeleton until the client is ready. Listing detail uses the same pattern. Routes don't deal with Leaflet.
+
+The catalog has no lat/lng. `listingCoords` hashes each slug and offsets a city center. The pins are stable fakes.
+
+`/cari` declares a viewport layout in `staticData`. `chromeFromMatches` reads it from the matched route. The root layout has no pathname list.
+
+Home has skeleton components for its data-driven rows. The map has one while Leaflet loads.
+
+I used Embla for the photo strip. I did not want to write swipe and thumbnail behavior from scratch.
+
+Light is the default. `theme-provider.tsx` sets light and disables system theme. The switch lives in the footer so the header can stay on search and nav.
+
+## SEO without Next.js
+
+A listing site lives on search traffic, and Next.js is the default answer: Metadata API, `sitemap.ts`, `robots.ts`, `next/og`. I picked TanStack Start anyway, for `/cari`. That page is a URL with 13 typed search params, and TanStack Router validates every one at the route boundary. That mattered more than free metadata helpers. I bet the agent could rebuild the SEO layer in an hour. It took about forty minutes.
+
+What shipped, all under `apps/web/src/domain/seo/`:
+
+- `seoHead()` builds title, description, robots, canonical, Open Graph, and Twitter tags from one `SeoDocument`. Every route calls it from TanStack's `head()`.
+- JSON-LD: `Organization`, `WebSite` with a `SearchAction`, `FAQPage` on home, `BreadcrumbList` and `Apartment` with an IDR `Offer` on listings, `CollectionPage` + `ItemList` on landings.
+- Canonical policy for `/cari`. A search that maps to a landing gets `noindex, follow`. Extra filters stay unindexed.
+- `sitemap.xml` (55 URLs) and `robots.txt`. OG images at `/og/*`. Web manifest, `lang="id"`, `og:locale` `id_ID`.
+
+I reviewed the canonical rules by hand. Eight unit tests cover them: city-only search canonicalizes to the landing and is not indexed, bare `/cari` stays indexed, facility filters stay on `/cari` unindexed, the JSON-LD offer uses the promo price when there is one.
+
+Paste a link in WhatsApp or X and the preview card comes from Open Graph. Every indexable page points at a PNG the server renders on demand. I copied Mamikos's layout: full green (`#247a4a`), white type, the ibu logo and "Ibukos" in the top right. Listing cards put the first photo on the left. Takumi turns the JSX into a 1200×630 PNG. I picked it over Satori because it ships with the same React-to-image model and the agent already had it wired.
+
+
+| Home                                          | Listing                                             |
+| --------------------------------------------- | --------------------------------------------------- |
+| ![Home OG card](docs/screenshots/og-home.png) | ![Listing OG card](docs/screenshots/og-listing.png) |
+
+
+Mamikos still ships a relative `og:image`. X wants an absolute URL, so the checker drops the image. Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production tags look like `https://ibukos.yfyx.dev/og`.
+
+![Mamikos X preview missing its OG image](docs/screenshots/og-mamikos-x-checker.jpg)
 
 ## Running it
 
@@ -82,110 +154,14 @@ BETTER_AUTH_SECRET=any-string-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3001
 ```
 
-## How I worked with AI
+## If I had more time
 
-I started with [shadcn/create](https://ui.shadcn.com/create) to get a visual direction, then used AI to break the brief into smaller pieces, scaffold the first pass, and iterate in the browser. I assumed I could get a 1:1 home from Figma capture extensions in under an hour, but skipped that route on purpose.
-
-Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI inside the Zed IDE. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
-
-What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner." One issue per message.
-
-After the CLI switch, [react-grab](https://github.com/aidenybai/react-grab) saved me the most. DEV-only import in `__root.tsx`. I clicked the broken bit in the page, copied the component context, pasted it into the CLI. Same "this corner" habit as attaching a DOM node in the GUI, except I didn't sit around waiting for Cursor to open.
-
-Where the agent saved the most time:
-
-- Scaffolding. Better-T-Stack gave me the monorepo, TanStack Start, Tailwind, Biome, and Turborepo in one command. Adding coss and shadcn components to `packages/ui` was another.
-- The search page. Before touching `/cari`, the agent mapped the existing search domain (URL parsing, facets, filtering). Then four agents each proposed an architecture and a fifth scored them against my rubric, [LLM-as-a-judge](https://arxiv.org/abs/2306.05685) style. The rubric asked "does `searchListings` stay pure?" and "is the live map camera kept off the URL?" The winner shipped.
-- SEO. Landing pages, [JSON-LD](https://json-ld.org), sitemap, and OG routes from one prompt plus a follow-up to render with Takumi.
-- Tests. Search query parsing, catalog grouping, SEO page generation. I have a standing rule against tautological tests, so these check round-trips and edge cases, not that a constant equals itself.
-
-Where it went sideways:
-
-- The first home page was, in my words, "soulless." Nothing like Mamikos. I had it screenshot the references (Mamikos, Zumper) before redoing it. It screenshotted our own site first.
-- Swapping the hero search for a Command component broke Base UI's group context, then looked worse than stock. Five rounds.
-- The promo folder tab took twenty messages, mostly red rulers on screenshots and "still a gap." I ended up dictating the geometry.
-- It tried to install Playwright and Chromium to check layout. I stopped it and looked myself. For pixel alignment, eyes and a ruler overlay beat automation.
-
-### Skills and models
-
-Skills I attached by hand:
-
-| Skill                                                                                                                    | Times  | What it's for                                                                                    |
-| ------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------ |
-| `emil-design-eng`                                                                                                        | 24     | Emil Kowalski's rules for motion, hover states, and polish. On almost every UI prompt.           |
-| `better-interface`                                                                                                       | 17     | Cross-discipline UI review (layout, a11y, typography, color, copy). The judge after each revamp. |
-| `no-ai-slop`                                                                                                             | 8      | Copy passes on the footer and this README.                                                       |
-| `coss-particles`, `coss`                                                                                                 | 7      | Component patterns from the coss registry.                                                       |
-| `human-writing`                                                                                                          | 4      | Same job as `no-ai-slop`, earlier in the session.                                                |
-| `poteto-mode`                                                                                                            | 3      | Orchestration that runs explore, architect, and judge agents. Used for `/cari`.                  |
-| `animate`                                                                                                                | 3      | Picks properties, curves, and durations for a new animation.                                     |
-| `find-animation-opportunities`                                                                                           | 2      | Motion audit.                                                                                    |
-| `tanstack-start`, `thermo-nuclear-code-quality-review`, `cloudflare`, `technical-writing`, `term-radar`, `anthropic-art` | 1 each | Docs, one code review, deploy, and a brand illustration I threw away for my own.                 |
-
-The agent also read skills on its own: `better-ui` (17), `better-layout` (14), `better-accessibility` (12), `architect` (10), and the pstack principle files that `poteto-mode` loads before nontrivial changes.
-
-The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. Later polish chats mixed in Composer 2.5 Fast and Auto. I asked for 21 subagent launches. 267 requests, cost about $222.40.
-
-### Takes
-
-**The homepage was done in under four hours.** The brief gave me a 3 to 5 hour window, and I finished the homepage before the four-hour mark. Everything after that was optional. I kept going because I enjoy building this kind of thing. Once the main page was working, I wanted to see how far I could take it.
-
-**I treated "inspired by Mamikos" as room to make my own product.** The brief asks for a frontend clone inspired by Mamikos. I read that as building in the same product space without reproducing every screen pixel for pixel. An exact copy would test how closely I could follow a reference. I wanted to show how I make product decisions when the reference gives me direction but not every answer.
-
-**Supervision is the job.** Most of the orchestration here (`poteto-mode`, `architect`, `arena`, the principle files) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you." I was skeptical of that framing and then spent nine hours living it. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks "off" by two pixels. My job was that second half.
-
-**Plan by pointing.** Through `poteto-mode`, I did use `never-block-on-the-human`. The agent read that rule eight times. It basically says stop asking and go. Lauren writes that she plans through code, using prototypes to let agents "answer their own questions with empirical evidence instead of waiting for my input."
-
-For UI work I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with rulers from [Mesurer](https://mesurer.dev/). Once I was on the CLI I used react-grab to grab the node instead of describing the tree. An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. She wrote that abstract plans "only give you the illusion of progress." The exception is architecture. For `/cari` pages I did want the plan interrogated, so I had four agents propose designs and one grade them, and I wrote the rubric. Grill the structure, not the pixels.
-
-**Verify with your eyes.** She wrote that if an agent can't verify its own work, "nothing else matters. You remain the bottleneck." The agent kept reaching for Playwright to drive the browser and screenshot its own work. I said "lemme verify manually", or some misspelling of it, eight times, then "never run browser again." It had screenshotted the wrong site once, but that wasn't the main problem. For alignment and motion, looking was faster than setting up a harness that would become another thing to debug. Automation helped where my eyes were the wrong tool. The 25 tests cover search parsing, catalog grouping, and canonical rules.
-
-**Spend on the judge.** She runs competing designs through a judge on a different model, then implements against the sketch. The model policy from the first prompt held all session: cheap fast workers write, one expensive model reads and scores. Grok only ever read. It graded four architecture candidates against the rubric and picked the one that shipped. `/cari` is the best-structured part of the repo because of that one review, and it cost a fraction of what running the whole build on the expensive model would have. If I only had budget for one expensive call, I'd spend it on the judge again.
-
-## Decisions worth explaining
-
-**Base UI because shadcn/create chose it.** This repo uses [Base UI](https://github.com/yafyx/ibukos/blob/master/packages/ui/package.json) through `@base-ui/react` and `@shadcn/react`. When I started, [shadcn/create](https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default) had made Base UI the default for new projects. Radix is still supported, so this was not a "Radix is dead" decision. I followed the default and kept moving.
-
-**Search state in the URL.** [/cari](https://github.com/yafyx/ibukos/blob/master/apps/web/src/routes/cari.tsx) validates its search object with `parseSearchQuery` and passes it into `searchListings`. While the map is moving, its bounds stay in the map component. Pressing "Cari di area ini" commits them to the URL. That gives back and forward a stable search state without navigating on every drag. The behavior lives in [the route](https://github.com/yafyx/ibukos/blob/master/apps/web/src/routes/cari.tsx) and [the map](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/cari/map-canvas.tsx).
-
-**Leaflet stays inside the map components.** [`map-island.tsx`](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/cari/map-island.tsx) lazy-loads [`map-canvas.tsx`](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/cari/map-canvas.tsx) and shows a skeleton until the client is ready. The listing detail map uses the same pattern. I kept the Leaflet code at the edge instead of making every route deal with it.
-
-**Map coordinates are deterministic fakes.** The catalog has no per-listing latitude or longitude. [`listingCoords`](https://github.com/yafyx/ibukos/blob/master/apps/web/src/domain/kos/labels.ts) hashes each slug and offsets a city center. The map gets stable positions without pretending the hardcoded catalog has real geodata.
-
-**Route metadata owns page chrome.** [/cari](https://github.com/yafyx/ibukos/blob/master/apps/web/src/routes/cari.tsx) declares a viewport layout in `staticData`. [`chromeFromMatches`](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/chrome/page-chrome.ts) reads that metadata from the matched route. The root layout does not need a list of pathnames to decide which shell to render.
-
-**Skeletons are explicit UI.** The home page has [skeleton components](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/home/home-skeletons.tsx) for its data-driven rows. The map uses a skeleton while Leaflet loads. That is more useful than leaving an empty rectangle on screen.
-
-**Embla handles the photo strip.** The UI package depends on [`embla-carousel-react`](https://github.com/yafyx/ibukos/blob/master/packages/ui/package.json), and the listing gallery uses the shared [photo carousel](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/kos/photo-carousel.tsx). I did not want to write swipe and thumbnail behavior from scratch.
-
-**Light is the default.** [`theme-provider.tsx`](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/chrome/theme-provider.tsx) sets the default theme to light and disables system theme detection. The switch lives in [`site-footer.tsx`](https://github.com/yafyx/ibukos/blob/master/apps/web/src/components/chrome/site-footer.tsx), so the header can stay focused on search and navigation.
-
-## SEO without Next.js
-
-A listing site lives on search traffic, and Next.js is the default answer: Metadata API, `sitemap.ts`, `robots.ts`, `next/og`, all in the box. I picked TanStack Start anyway, for `/cari`. That page is a URL with 13 typed search params (city, gender, price range, facilities, sort, map bounds, view), and TanStack Router validates every one at the route boundary. That mattered more than free metadata helpers. I bet the agent could rebuild the SEO layer in an hour. It took about forty minutes.
-
-What shipped, all under `apps/web/src/domain/seo/`:
-
-- `seoHead()` builds title, description, robots, canonical, Open Graph, and Twitter tags from one `SeoDocument`. Every route calls it from TanStack's [`head()`](https://tanstack.com/router/latest/docs/framework/react/guide/document-head-management).
-- [JSON-LD](https://json-ld.org): `Organization`, `WebSite` with a `SearchAction`, `FAQPage` on home, `BreadcrumbList` and [`Apartment`](https://schema.org/Apartment) with an IDR `Offer` on listings, `CollectionPage` + `ItemList` on landings.
-- A [canonical](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) policy for `/cari`. A search that maps to a landing gets [`noindex, follow`](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag). Extra filters stay unindexed.
-- [`sitemap.xml`](https://www.sitemaps.org/protocol.html) (55 URLs) and `robots.txt`. OG images at `/og/*`. A [web manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest), `lang="id"`, `og:locale` `id_ID`.
-
-I reviewed the canonical rules by hand. Eight unit tests cover them: city-only search canonicalizes to the landing and is not indexed, bare `/cari` stays indexed, facility filters stay on `/cari` unindexed, the JSON-LD offer uses the promo price when there is one.
-
-Paste a link in WhatsApp or X and the preview card comes from Open Graph tags. Every indexable page points at a PNG the server renders on demand. I copied Mamikos's layout: full green (`#247a4a`), white type, the ibu logo and "Ibukos" in the top right. Listing cards put the first photo on the left. [Takumi](https://takumi.kane.tw/) turns the JSX into a 1200×630 PNG. I picked it over [Satori](https://github.com/vercel/satori) because it ships with the same React-to-image model and the agent already had it wired.
-
-| Home                                          | Listing                                             |
-| --------------------------------------------- | --------------------------------------------------- |
-| ![Home OG card](docs/screenshots/og-home.png) | ![Listing OG card](docs/screenshots/og-listing.png) |
-
-Mamikos still ships a relative `og:image`. X wants an absolute URL, so the checker drops the image. Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production tags look like `https://ibukos.yfyx.dev/og`.
-
-![Mamikos X preview missing its OG image](docs/screenshots/og-mamikos-x-checker.jpg)
-
-## What I'd do with more time
-
-Real coordinates and a real data source. Working auth, or remove it. [Virtualize](https://tanstack.com/virtual) the `/cari` list once the catalog passes 30.
+Real coordinates and a real data source. Working auth, or strip it. Virtualize the `/cari` list once the catalog passes 30.
 
 The rest is continuous improvement like the promo folder.
+
 ![Live debug overlay while morphing a tab cutout](docs/screenshots/tab-cutout-debug.gif)
+
+Thank you for reading all of this. You didn't have to stay this long, and I don't take it lightly. I wrote more than the brief asked because I care about this kind of product.
+
+ᢉ𐭩
