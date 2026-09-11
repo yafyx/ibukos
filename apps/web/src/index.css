@@ -638,16 +638,18 @@ button,
 
 .promo-folder {
 	--folder-bg: var(--muted);
-	--folder-stroke: color-mix(in oklch, var(--foreground) 14%, var(--border));
+	--folder-stroke: color-mix(in oklch, var(--foreground) 16%, var(--border));
 	--folder-stroke-active: color-mix(
 		in oklch,
-		var(--foreground) 36%,
+		var(--foreground) 26%,
 		var(--border)
 	);
 	--folder-tab-height: 2.625rem;
 	--folder-tab-raise: 4px;
 	--folder-tail-reach: 54px;
 	--folder-tail-reach-muted: 32px;
+	/* x in the 60-wide tail viewBox where the S leaves the top. */
+	--folder-curve-at: 8.078;
 	overflow: visible;
 }
 
@@ -701,7 +703,7 @@ button,
  * Folder tabs, built like the Next.js dev tools notch: an HTML box with an
  * SVG S-curve tail glued to it. Every city owns the muted S on its right and
  * the next city overlaps that tail so the top line reads as continuous.
- * The active city is the notch: filled, dark outline, a long S on its right
+ * The active city is the notch: filled, a slightly stronger outline, a long S on its right
  * and (when it is not the first city) a mirrored S on its left. The city
  * before it hides its own S so the two curves never meet in a valley.
  */
@@ -710,11 +712,14 @@ button,
 	--tail-stroke: var(--folder-stroke);
 	--tab-fill: transparent;
 	--tail-width: var(--folder-tail-reach-muted);
+	--folder-curve-overlap: calc(
+		var(--tail-width) * var(--folder-curve-at) / 60
+	);
 	position: relative;
 	z-index: 1;
 	display: flex;
 	flex: none;
-	align-items: center;
+	align-items: stretch;
 	height: var(--folder-tab-height);
 	padding-inline-end: var(--tail-width);
 	background: transparent;
@@ -731,7 +736,8 @@ button,
 	display: flex;
 	align-items: center;
 	height: 100%;
-	margin-inline-end: -8px;
+	/* End the HTML top stroke where the SVG S starts. */
+	margin-inline-end: calc(var(--folder-curve-overlap) * -1);
 	pointer-events: auto;
 }
 
@@ -741,14 +747,60 @@ button,
 	position: absolute;
 	inset: 0;
 	z-index: -1;
-	border-block-start: 1px solid var(--top-stroke);
 	background: var(--tab-fill);
 	pointer-events: none;
 	/* Colour changes cross-fade; position changes are FLIPped via transform. */
 	transition:
 		background-color 160ms ease,
-		border-color 160ms ease,
 		box-shadow 160ms ease;
+}
+
+/* Straight top of the tab. Stretches with the same viewBox as the S-curve. */
+.promo-folder-notch-edge[data-side="top"] {
+	position: absolute;
+	top: 0;
+	right: calc(var(--tail-width) - 2px);
+	left: 0;
+	z-index: 2;
+	width: auto;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.promo-folder-notch-edge[data-side="top"] svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.promo-folder-notch[data-active="true"]:not(:first-child)
+	.promo-folder-notch-edge[data-side="top"] {
+	left: calc(var(--folder-tail-reach) - 2px);
+}
+
+.promo-folder-notch:first-child .promo-folder-notch-edge[data-side="top"] {
+	left: calc(var(--radius-xl) - 1px);
+}
+
+/* First city's rounded top-left, dropping into the folder body. */
+.promo-folder-notch-edge[data-side="start"] {
+	display: none;
+}
+
+.promo-folder-notch:first-child .promo-folder-notch-edge[data-side="start"] {
+	display: block;
+	position: absolute;
+	top: 0;
+	bottom: -8px;
+	left: 0;
+	z-index: 2;
+	width: var(--radius-xl);
+	border-top: 1px solid var(--top-stroke);
+	border-left: 1px solid var(--top-stroke);
+	border-start-start-radius: var(--radius-xl);
+	pointer-events: none;
 }
 
 .promo-folder-notch [data-flip] {
@@ -756,7 +808,6 @@ button,
 }
 
 .promo-folder-notch:first-child .promo-folder-notch-fill {
-	border-inline-start: 1px solid var(--top-stroke);
 	border-start-start-radius: var(--radius-xl);
 }
 
@@ -764,7 +815,7 @@ button,
 .promo-folder-notch-tail {
 	position: absolute;
 	top: 0;
-	z-index: 0;
+	z-index: 2;
 	height: 100%;
 	overflow: visible;
 	pointer-events: none;
@@ -830,14 +881,18 @@ button,
 	height: calc(var(--folder-tab-height) + var(--folder-tab-raise));
 }
 
-.promo-folder-notch[data-active="true"] .promo-folder-notch-content {
-	/* Keep the label on the same baseline as the other cities. */
+.promo-folder-notch[data-active="true"] [data-slot="tabs-tab"] {
 	padding-block-start: var(--folder-tab-raise);
-	margin-inline-end: -10px;
 }
 
 .promo-folder-notch[data-active="true"] .promo-folder-notch-fill {
 	box-shadow: 0 8px 0 var(--tab-fill);
+}
+
+.promo-folder-notch[data-active="true"]:first-child .promo-folder-notch-fill {
+	box-shadow:
+		0 8px 0 var(--tab-fill),
+		-1px 8px 0 var(--tab-fill);
 }
 
 /* The raised S crosses the row top ~21/60 into the tail, so the neighbour's
@@ -866,7 +921,7 @@ button,
 
 .promo-folder-notch[data-active="true"]:not(:first-child)
 	.promo-folder-notch-content {
-	margin-inline-start: -10px;
+	margin-inline-start: calc(var(--folder-curve-overlap) * -1);
 }
 
 .promo-folder-notch[data-active="true"]:not(:first-child)
@@ -881,6 +936,7 @@ button,
 	height: 100%;
 	min-height: 0;
 	flex-grow: 0;
+	border-width: 0;
 	touch-action: manipulation;
 	transition:
 		color 150ms var(--ease-out),
@@ -937,8 +993,7 @@ button,
 	--tail-stroke: transparent;
 }
 
-.promo-folder:has(.promo-folder-notch:first-child[data-active="true"])
-	.promo-folder-body {
+.promo-folder:has(.promo-folder-notch:first-child) .promo-folder-body {
 	border-start-start-radius: 0;
 }
 

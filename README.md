@@ -196,12 +196,50 @@ What shipped, all under `apps/web/src/domain/seo/`:
 - Landing pages at `/kota/$city`, `/kota/$city/$gender`, `/kampus/$slug`, `/tipe/$gender`. Crawlable, static-looking versions of common searches.
 - A [canonical](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) policy for `/cari`, the usual [faceted navigation](https://developers.google.com/search/docs/crawling-indexing/crawling-managing-faceted-navigation) problem. A bare search is indexable. A search that maps to a landing (city, city plus gender, a campus) gets [`noindex, follow`](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag) and a canonical to that landing, so Google sees one URL per intent instead of every filter permutation. Anything with extra filters is `noindex`.
 - [`sitemap.xml`](https://www.sitemaps.org/protocol.html) (55 URLs, generated from the catalog) and `robots.txt` as server route handlers. `/login`, `/dashboard`, `/api/` disallowed.
-- Open Graph images at `/og/*`, one route per page type, rendered from React with Takumi instead of [Satori](https://github.com/vercel/satori). Figtree loads once and is cached; responses carry an hour of [`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control).
+- Open Graph images at `/og/*`. See [Open Graph images](#open-graph-images) below.
 - A [web manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest), `lang="id"`, `og:locale` `id_ID`, preconnects for Google Fonts.
 
 The agent did most of this from one prompt ("now maximize the SEO for this site") plus the Takumi swap. I reviewed the canonical rules by hand because they're easy to get subtly wrong. Eight unit tests cover them: city-only search canonicalizes to the landing and is not indexed, bare `/cari` stays indexed, facility filters stay on `/cari` unindexed, the JSON-LD offer uses the promo price when there is one.
 
 Missing versus Next.js: no [prerender](https://tanstack.com/start/latest/docs/framework/react/guide/prerendering) of the landings (they render per request), no [`hreflang`](https://developers.google.com/search/docs/specialty/international/localized-versions) (one language, so not yet), and no [Lighthouse](https://developer.chrome.com/docs/lighthouse) run. First things to check with real traffic.
+
+### Open Graph images
+
+Paste a link in WhatsApp or X and the preview card comes from [Open Graph](https://ogp.me) tags. Every indexable page points at a PNG the server renders on demand, not a file sitting in `public/`.
+
+The routes mirror the page types:
+
+| Route | Card |
+| --- | --- |
+| `/og` | Home |
+| `/og/kos/$slug` | Listing |
+| `/og/kota/$city` | City landing |
+| `/og/kota/$city/$gender` | City plus gender |
+| `/og/kampus/$slug` | Campus landing |
+| `/og/tipe/$gender` | Gender landing |
+| `/og/cari` | Search |
+
+`seoHead()` picks the image URL with `ogImagePath()`. `/` maps to `/og`. Every other path gets `/og` prepended, so `/kos/kos-mawar-ugm` becomes `https://ibukos.yfyx.dev/og/kos/kos-mawar-ugm`.
+
+Rendering lives in `domain/seo/og-response.tsx`. It loads Figtree once through Takumi's `googleFonts()`, resolves an absolute URL for `public/brand/ibukos-ibu.png` from the request origin, and passes both into `OgCard`. [Takumi](https://takumi.kane.tw/) turns the JSX into a 1200×630 PNG. I picked it over [Satori](https://github.com/vercel/satori) because it ships with the same React-to-image model and the agent already had it wired. Responses cache for an hour via [`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control).
+
+The card is `domain/seo/og-card.tsx`. I copied Mamikos's layout: full green background (`#247a4a`), white type, the ibu logo and "Ibukos" in the top right. Listing cards put the first photo on the left in a rounded frame with a shadow, the same slot Mamikos uses for its phone mockup. Text sits on the right: gender badge when it applies, title, subtitle, price. Home, city landings, and search skip the photo column.
+
+Card data is in `domain/seo/og-model.ts`. One function per page type returns an `OgCardModel` (kicker, title, subtitle, optional badge, photo, price). Listing cards pull the first photo and promo price from the catalog.
+
+Examples:
+
+| Home | Listing |
+| --- | --- |
+| ![Home OG card](docs/screenshots/og-home.png) | ![Listing OG card](docs/screenshots/og-listing.png) |
+
+Preview locally at `http://localhost:3001/og` or `/og/kos/kos-mawar-ugm`. To sanity-check tags and the X card, paste a URL into [check-site-meta](https://check-site-meta-alfonsusacs-projects.vercel.app).
+
+One thing I checked while writing this: Mamikos still ships a relative `og:image` (`/assets/og/og_kost_v3.jpg`). X wants an absolute URL, so the checker drops the image and falls back to summary with no image:
+
+![Mamikos X preview missing its OG image](docs/screenshots/og-mamikos-x-checker.jpg)
+
+Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production tags look like `https://ibukos.yfyx.dev/og`. Local dev without `VITE_SITE_URL` still emits `/og`, same failure mode, which is why the deploy script sets the origin at build time.
 
 ## What I'd do with more time
 

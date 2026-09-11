@@ -8,7 +8,7 @@ const curve =
 	"C15.772 0 22.784 4.413 26.111 11.35L34.889 29.65C38.216 36.587 45.228 41 52.922 41";
 // Tab side of the S (left of the curve), down to the folder body.
 const tabSide = `M0 0H8.078${curve}V42H0Z`;
-const curveStroke = `M8.078 0.5C15.772 0.5${curve.slice("C15.772 0".length)}`;
+const curveStroke = `M0.5 0.5H8.078C15.772 0.5${curve.slice("C15.772 0".length)}`;
 
 export function FolderNotch({
 	active = false,
@@ -23,9 +23,40 @@ export function FolderNotch({
 			data-active={active ? "true" : undefined}
 		>
 			<FolderNotchTail side="start" />
+			{/* Stroke lives on the notch, same layer as the SVG S, so it cannot
+			    sit behind the label or double up with the curve. */}
+			<span
+				aria-hidden="true"
+				className="promo-folder-notch-edge"
+				data-side="start"
+			/>
+			{/* Same 42-tall viewBox as the S, so a raised tab cannot split the
+			    top into a second stripe. */}
+			<span
+				aria-hidden="true"
+				className="promo-folder-notch-edge"
+				data-flip=""
+				data-side="top"
+			>
+				<svg
+					fill="none"
+					height="42"
+					overflow="visible"
+					preserveAspectRatio="none"
+					viewBox="0 0 10 42"
+					width="10"
+				>
+					<path
+						d="M0 0.5H10"
+						stroke="var(--top-stroke)"
+						strokeLinecap="square"
+						strokeWidth="1"
+						vectorEffect="non-scaling-stroke"
+					/>
+				</svg>
+			</span>
 			<div className="promo-folder-notch-content" data-flip="x">
-				{/* Fill + top edge live here so they can stretch when the notch
-				    rises, without ever scaling the label. */}
+				{/* Fill only: background stretches with FLIP; outline is the edges. */}
 				<span aria-hidden="true" className="promo-folder-notch-fill" data-flip="" />
 				{children}
 			</div>
@@ -54,6 +85,7 @@ function FolderNotchTail({ side }: { side: "start" | "end" }) {
 					<path
 						d={curveStroke}
 						stroke="var(--tail-stroke)"
+						strokeLinecap="square"
 						strokeWidth="1"
 						vectorEffect="non-scaling-stroke"
 					/>

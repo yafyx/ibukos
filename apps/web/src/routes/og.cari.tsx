@@ -6,7 +6,7 @@ import { ogImageResponse } from "@/domain/seo/og-response";
 export const Route = createFileRoute("/og/cari")({
 	server: {
 		handlers: {
-			GET: () => ogImageResponse(searchOgCard()),
+			GET: ({ request }) => ogImageResponse(searchOgCard(), request.url),
 		},
 	},
 });

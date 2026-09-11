@@ -3,6 +3,7 @@ import { ImageResponse } from "takumi-js/response";
 
 import { OgCard } from "./og-card";
 import type { OgCardModel } from "./og-model";
+import { absoluteUrl, siteOrigin } from "./site";
 
 const OG_SIZE = { width: 1200, height: 630 } as const;
 
@@ -15,16 +16,26 @@ function ogFonts() {
 	return fontsPromise;
 }
 
-export async function ogImageResponse(card: OgCardModel): Promise<Response> {
+export async function ogImageResponse(
+	card: OgCardModel,
+	requestUrl?: string,
+): Promise<Response> {
 	const fonts = await ogFonts();
-	const response = new ImageResponse(<OgCard card={card} />, {
-		...OG_SIZE,
-		fonts,
-		format: "png",
-		headers: {
-			"Cache-Control": "public, max-age=3600",
+	const logoSrc = absoluteUrl(
+		"/brand/ibukos-ibu.png",
+		siteOrigin(requestUrl),
+	);
+	const response = new ImageResponse(
+		<OgCard card={card} logoSrc={logoSrc} />,
+		{
+			...OG_SIZE,
+			fonts,
+			format: "png",
+			headers: {
+				"Cache-Control": "public, max-age=3600",
+			},
 		},
-	});
+	);
 	try {
 		await response.ready;
 		return response;
