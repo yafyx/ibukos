@@ -3,10 +3,7 @@
 A Mamikos-style kos (boarding house) finder, built for a frontend take-home that asks one thing: how well can you use AI to ship an interface? The brief is in [task.md](./task.md). The minimum was the home page. I went further because the search page had the interesting decisions.
 
 - Demo: [ibukos.yfyx.dev](https://ibukos.yfyx.dev)
-- Screen recording: [Submission for Mamikos Frontend Engineer Task](https://www.youtube.com/playlist?list=PLSQAzGocc_rg)
 - Stack: [TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) components on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev)
-
-![Home page at 1280px](docs/screenshots/home-hero.png)
 
 ## What's here
 
@@ -24,34 +21,23 @@ Everything is in Indonesian, like the original. Listing data is hardcoded in `ap
 
 ## Interactions worth a look
 
-Screenshots are from Playwright against the dev server at 1280px and 390px. The script lives outside the repo; the stills are in `docs/screenshots/`.
-
 ### The search box moves into the header
 
 Scroll past the hero and the search box reappears in the header. The browser animates the move. This is a [shared element transition](https://developer.chrome.com/docs/web-platform/view-transitions/same-document) on the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API), driven by React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition).
 
-| Hero                                           | Docked                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------ |
-| ![Hero search](docs/screenshots/home-hero.png) | ![Search docked in header](docs/screenshots/home-docked.png) |
+![Search box docking into the header on scroll](docs/screenshots/home-search-dock.gif)
 
-In `apps/web/src/components/search/search-dock.tsx`:
-
-- Both spots render `LocationSearchSlot`, which wraps `LocationSearch` in `<ViewTransition name="location-search" share="morph">`. One name in two places tells the browser it is the same element before and after.
-- `useHeroSearchSentinel` watches a sentinel under the hero with an [`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API). Its `rootMargin` is the live header height, kept in `--site-header-height` by a [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) in `site-header.tsx`. "Out of view" means "under the header".
-- The flip has [hysteresis](https://en.wikipedia.org/wiki/Hysteresis): dock at 15% visible, undock at 60%. Without the gap it flickers when you stop at the edge.
-- The state change runs in [`startTransition`](https://react.dev/reference/react/startTransition), so React calls [`document.startViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition). The `.morph` rules in `index.css` set `--duration-move` and `--ease-in-out` on the group, clip the corners, and cross-fade old and new with `object-fit: none; object-position: left center` so the placeholder text doesn't stretch.
-- The header has `view-transition-name: site-header` with `animation: none`, so it holds still above the moving box.
-- [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion) swaps in place with no animation. Cmd+K opens the dialog with a zero-duration scale.
+See `apps/web/src/components/search/search-dock.tsx` and the `.morph` rules in `index.css`.
 
 ### The search dialog
 
-![Command dialog](docs/screenshots/search-dialog.png)
+![Command dialog](docs/screenshots/search-dialog.gif)
 
 A coss [`Command`](https://coss.com/ui/docs/components/command) dialog on Base UI's Autocomplete. Empty state is a browse panel: "Cari di lokasi sekitar saya" (geolocation, snapped to the nearest catalog city), popular campuses as chips, then Kampus / Area / Stasiun & Halte tabs with a city accordion under each. Typing filters. Enter with free text goes to `/cari?q=`. On phones the dialog is full-screen.
 
 ### Save chip
 
-![Save chip mid-feedback](docs/screenshots/save-chip.png)
+![Save chip mid-feedback](docs/screenshots/save-chip.gif)
 
 A Base UI `Toggle` persisted to [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage). On save the chip widens, "Disimpan" slides out from the icon, holds 1.4s, collapses over 200ms. On remove there is no text; the icon lifts out over 550ms. Both write to an [`aria-live`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live) region. Same chip on cards, promo folders, and the detail page.
 
@@ -69,9 +55,9 @@ The twenty messages in the session were almost all this geometry. Red rulers on 
 
 ### Search page: list, map, and the toggle
 
-| Desktop split                                  | Mobile                                                                |
-| ---------------------------------------------- | --------------------------------------------------------------------- |
-| ![Split view](docs/screenshots/cari-split.png) | ![Mobile list with floating toggle](docs/screenshots/cari-mobile.png) |
+| Desktop split                                    | Mobile                                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------- |
+| ![Toggle List / Split / Map](docs/screenshots/cari-views.gif) | ![Mobile list with floating toggle](docs/screenshots/cari-mobile.png) |
 
 - Daftar / Gabungan / Peta is a `ToggleGroup`. `commitView` in `cari/workspace.tsx` wraps the state change and the navigate in `startTransition`, tagged with [`addTransitionType("cari-view")`](https://react.dev/reference/react/addTransitionType). The `cari-list` and `cari-map` `ViewTransition`s map that type to `.layout`, so the panes resize over `--duration-move` and nothing else animates. Every other update is `default="none"`.
 - Pins are Leaflet [`DivIcon`](https://leafletjs.com/reference.html#divicon)s showing price, colored by gender with the same chip classes as the cards. Card hover highlights the pin and pin hover highlights the card through one `useReducer` in `domain/cari/highlight.ts`. Clicking a pin scrolls its card into view.
@@ -80,7 +66,7 @@ The twenty messages in the session were almost all this geometry. Red rulers on 
 
 ### Listing detail
 
-![Listing detail](docs/screenshots/kos-detail.png)
+![Listing detail](docs/screenshots/kos-detail.gif)
 
 [Embla](https://www.embla-carousel.com) carousel with a thumbnail strip and a "Lihat semua" count. With a mouse, the next arrow is hidden until you hover the image, then fades in as a full-height gradient at the edge. It unmounts on the last slide rather than rendering disabled. On touch it stays visible, and you can swipe. The sticky action card has the price, an availability form with a date picker, WhatsApp, copy link, and report.
 
@@ -107,9 +93,11 @@ BETTER_AUTH_URL=http://localhost:3001
 
 ## How I worked with AI
 
-Cursor was the only editor. Nearly every change went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
+Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
 
-What worked was pointing at one element and saying what's wrong. Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner" or "only show the next button when I hover the image part." One issue per message. Broad prompts like "make this less generic" got broad, generic output and three or four follow-ups.
+What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner" or "only show the next button when I hover the image part." One issue per message. Broad prompts like "make this less generic" got broad, generic output and three or four follow-ups.
+
+After the CLI switch, [react-grab](https://github.com/aidenybai/react-grab) saved me the most. DEV-only import in `__root.tsx`. I clicked the broken bit in the page, copied the component context, pasted it into the CLI. Same "this corner" habit as attaching a DOM node in the GUI, except I didn't sit around waiting for Cursor to open.
 
 Where the agent saved the most time:
 
@@ -127,31 +115,42 @@ Where it went sideways:
 
 ### Skills and models
 
-Counts are from the 47 Cursor transcripts for this repo.
+I ran `skilled` again. It still doesn't index Cursor (Claude Code, Codex, Droid, OpenCode, Grok CLI only), so the counts below are from the 53 Cursor chats in this repo, plus Cursor's usage events for those conversations.
 
 Skills I attached by hand:
 
-| Skill                                                                           | Times  | What it's for                                                                                    |
-| ------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `emil-design-eng`                                                               | 26     | Emil Kowalski's rules for motion, hover states, and polish. On almost every UI prompt.           |
-| `better-interface`                                                              | 19     | Cross-discipline UI review (layout, a11y, typography, color, copy). The judge after each revamp. |
-| `coss-particles`, `coss`                                                        | 7      | Component patterns from the coss registry.                                                       |
-| `poteto-mode`                                                                   | 4      | Orchestration that runs explore, architect, and judge agents. Used for `/cari`.                  |
-| `animate`                                                                       | 3      | Picks properties, curves, and durations for a new animation.                                     |
-| `tanstack-start`, `find-animation-opportunities`, `no-ai-slop`, `human-writing` | 2 each | Framework docs, motion audit, and the copy passes on the footer and this README.                 |
-| `thermo-nuclear-code-quality-review`, `anthropic-art`                           | 1 each | One code review; one brand illustration I threw away for my own.                                 |
+| Skill                                                                                          | Times  | What it's for                                                                                    |
+| ---------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
+| `emil-design-eng`                                                                              | 24     | Emil Kowalski's rules for motion, hover states, and polish. On almost every UI prompt.           |
+| `better-interface`                                                                             | 17     | Cross-discipline UI review (layout, a11y, typography, color, copy). The judge after each revamp. |
+| `no-ai-slop`                                                                                   | 8      | Copy passes on the footer and this README.                                                       |
+| `coss-particles`, `coss`                                                                       | 7      | Component patterns from the coss registry.                                                       |
+| `human-writing`                                                                                | 4      | Same job as `no-ai-slop`, earlier in the session.                                                |
+| `poteto-mode`                                                                                  | 3      | Orchestration that runs explore, architect, and judge agents. Used for `/cari`.                  |
+| `animate`                                                                                      | 3      | Picks properties, curves, and durations for a new animation.                                     |
+| `find-animation-opportunities`                                                                 | 2      | Motion audit.                                                                                    |
+| `tanstack-start`, `thermo-nuclear-code-quality-review`, `cloudflare`, `technical-writing`, `term-radar`, `anthropic-art` | 1 each | Docs, one code review, deploy, and a brand illustration I threw away for my own.                 |
 
-The agent also read skills on its own: `better-ui` (20), `better-layout` (16), `architect` (15), `better-accessibility` (14), and the pstack principle files (`model-the-domain`, `boundary-discipline`, `prove-it-works`, and others) that `poteto-mode` loads before nontrivial changes.
+The agent also read skills on its own: `better-ui` (17), `better-layout` (14), `better-accessibility` (12), `architect` (10), and the pstack principle files (`model-the-domain`, `boundary-discipline`, `prove-it-works`, and others) that `poteto-mode` loads before nontrivial changes.
 
-Models. The main chat ran on _TODO: main chat model_ (transcripts don't record it). For subagents the policy was cheap fast workers and one expensive judge. The 28 launches:
+The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. Later polish chats mixed in Composer 2.5 Fast and Auto (`default` in the usage export). I asked for 21 subagent launches. `inherit` is not a model: it means "whatever the parent is on," and all 12 of those came from the Grok 4.6 High `/cari` chat, so they ran Grok 4.6 High. The one `fast` launch was an Explore subagent; Cursor's Explore default billed it as Composer 2.5 Fast.
 
-| Model                  | Launches | Role                                                         |
-| ---------------------- | -------- | ------------------------------------------------------------ |
-| Composer 2.5 Fast      | 8        | Workers: architect candidates, poteto implementation agents. |
-| inherit (parent model) | 12       | Explorers and general helpers.                               |
-| Grok 4.6 High          | 4        | Judge for the four `/cari` candidates, plus code review.     |
-| GPT-5.6 Luna Medium    | 2        | Second-opinion workers.                                      |
-| fast tier              | 2        | Read-only explorers.                                         |
+What Cursor actually billed, 267 requests, all marked included in Pro+:
+
+| Model                            | Requests | Input     | Output    | Cache write | Cache read | Listed cost |
+| -------------------------------- | -------- | --------- | --------- | ----------- | ---------- | ----------- |
+| Cursor Grok 4.6 High             | 111      | 10.5M     | 1.54M     | 0           | 186M       | $123.76     |
+| Composer 2.5 Fast                | 101      | 2.68M     | 564k      | 0           | 61.3M      | $46.39      |
+| Claude Fable 5.1 Thinking High   | 14       | 492       | 215k      | 757k        | 38.8M      | $29.89      |
+| Cursor Grok 4.6 Medium Fast      | 1        | 548k      | 25k       | 0           | 6.68M      | $9.17       |
+| Cursor Grok 4.6 Extra High       | 11       | 755k      | 163k      | 0           | 9.81M      | $7.39       |
+| Auto (`default`)                 | 14       | 632k      | 55k       | 0           | 4.23M      | $3.71       |
+| Cursor Grok 4.6 Medium           | 10       | 322k      | 23k       | 0           | 2.25M      | $1.91       |
+| GPT-5.6 Luna Extra High          | 4        | 168       | 9k        | 120k        | 6.12M      | $0.16       |
+| GPT-5.6 Luna Medium              | 1        | 39        | 5k        | 34k         | 355k       | $0.02       |
+| **Total**                        | **267**  | **15.4M** | **2.60M** | **0.91M**   | **315M**   | **$222.40** |
+
+$222.40 is Cursor's listed price for those tokens. None of it went to on-demand; Pro+ ate it. Cache reads are most of the burn, which is how these long agent threads work.
 
 ### Takes
 
@@ -161,7 +160,7 @@ Four things I'd tell someone doing this test next week.
 
 **Plan by pointing.** I have `grill-me` installed. Its description is "a relentless interview to sharpen a plan or design." In 181 prompts I invoked it zero times. What I did invoke, through `poteto-mode`, was `never-block-on-the-human`, which the agent read eight times and which says, roughly, stop asking and go.
 
-That's not laziness, or not only. For UI work I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with red rulers drawn on it. An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. The exception is architecture. For `/cari` I did want the plan interrogated, so I had four agents propose designs and one grade them, and I wrote the rubric. Grill the structure, not the pixels.
+That's not laziness, or not only. For UI work I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with red rulers drawn on it. Once I was on the CLI I used react-grab to grab the node instead of describing the tree. An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. The exception is architecture. For `/cari` I did want the plan interrogated, so I had four agents propose designs and one grade them, and I wrote the rubric. Grill the structure, not the pixels.
 
 **Verify with your eyes.** The agent kept wanting Playwright, to drive a browser and screenshot its own work. I said "lemme verify manually", or some misspelling of it, eight times, and then "never run browser again." Partly because it screenshotted the wrong site. Mostly because for alignment and motion, looking is faster than any harness it could set up, and the harness itself becomes a thing to debug. The one place automation earned its keep was the domain layer: 25 unit tests on search parsing, catalog grouping, and canonical rules, which are exactly the things eyes are bad at.
 
@@ -209,15 +208,15 @@ Paste a link in WhatsApp or X and the preview card comes from [Open Graph](https
 
 The routes mirror the page types:
 
-| Route | Card |
-| --- | --- |
-| `/og` | Home |
-| `/og/kos/$slug` | Listing |
-| `/og/kota/$city` | City landing |
+| Route                    | Card             |
+| ------------------------ | ---------------- |
+| `/og`                    | Home             |
+| `/og/kos/$slug`          | Listing          |
+| `/og/kota/$city`         | City landing     |
 | `/og/kota/$city/$gender` | City plus gender |
-| `/og/kampus/$slug` | Campus landing |
-| `/og/tipe/$gender` | Gender landing |
-| `/og/cari` | Search |
+| `/og/kampus/$slug`       | Campus landing   |
+| `/og/tipe/$gender`       | Gender landing   |
+| `/og/cari`               | Search           |
 
 `seoHead()` picks the image URL with `ogImagePath()`. `/` maps to `/og`. Every other path gets `/og` prepended, so `/kos/kos-mawar-ugm` becomes `https://ibukos.yfyx.dev/og/kos/kos-mawar-ugm`.
 
@@ -229,8 +228,8 @@ Card data is in `domain/seo/og-model.ts`. One function per page type returns an 
 
 Examples:
 
-| Home | Listing |
-| --- | --- |
+| Home                                          | Listing                                             |
+| --------------------------------------------- | --------------------------------------------------- |
 | ![Home OG card](docs/screenshots/og-home.png) | ![Listing OG card](docs/screenshots/og-listing.png) |
 
 Preview locally at `http://localhost:3001/og` or `/og/kos/kos-mawar-ugm`. To sanity-check tags and the X card, paste a URL into [check-site-meta](https://check-site-meta-alfonsusacs-projects.vercel.app).
@@ -244,18 +243,3 @@ Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production ta
 ## What I'd do with more time
 
 Real coordinates and a real data source. Working auth, or remove it. [Virtualize](https://tanstack.com/virtual) the `/cari` list once the catalog passes 30. And cut the promo folder earlier; fun, but twenty messages for a curve.
-
-## Where the code is
-
-Bun workspaces with Turborepo. One app, four shared packages.
-
-| Path                       | What's in it                                                                                                                                                                                                                                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `apps/web/src/routes/`     | File-based routes. `index.tsx` home, `cari.tsx` search, `kos.$slug.tsx` detail, `kota.*`, `kampus.*`, `tipe.*` landings, `og.*` images, `sitemap[.]xml.ts`, `robots[.]txt.ts`.                                                                                                                                                 |
-| `apps/web/src/domain/`     | Plain TypeScript, no components (the OG card is the one JSX file). `kos/catalog.ts` holds the 30 listings. `facets/` is the `SearchQuery` type and its URL parser. `search/run.ts` is `searchListings()`. `seo/` builds meta tags, JSON-LD, sitemap, canonical rules, and OG cards. Tests sit next to the code as `*.test.ts`. |
-| `apps/web/src/components/` | React, grouped by page: `home/`, `cari/`, `kos/`, `search/`, `chrome/` (header, footer, theme).                                                                                                                                                                                                                                |
-| `apps/web/src/lib/`        | `saved-kos.ts` (localStorage), `motion.ts`, `auth-client.ts`.                                                                                                                                                                                                                                                                  |
-| `packages/ui`              | 55 coss and shadcn components on Base UI, plus `globals.css` with the design tokens. Import as `@ibukos/ui/components/<name>`.                                                                                                                                                                                                 |
-| `packages/auth`            | Better Auth config. No database.                                                                                                                                                                                                                                                                                               |
-| `packages/env`             | Typed env with `@t3-oss/env-core`.                                                                                                                                                                                                                                                                                             |
-| `packages/config`          | Shared `tsconfig.base.json`.                                                                                                                                                                                                                                                                                                   |
