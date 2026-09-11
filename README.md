@@ -1,15 +1,11 @@
 # Ibukos
 
-A kos finder inspired by Mamikos. Built for Mamikos FE take-homem How well can you use AI to ship an interface? The brief is in [task.md](./task.md). Minimum was the home page. I shipped that inside the 3-5 hour window, then spent optional time on...
-
-A 1:1 home via Figma capture extensions is a short path I could have taken. I skipped it on purpose.
+A kos finder inspired by Mamikos. Built for the Mamikos FE take-home. How well can you use AI to ship an interface? The brief is in [task.md](./task.md). The minimum was the home page. I shipped that inside the 3-5 hour window, then spent another time on the rest of the search, listing detail pages, city and campus landing pages, and the small interaction details that connect them.
 
 - Demo: [ibukos.yfyx.dev](https://ibukos.yfyx.dev)
 - Stack: [TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) components on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev)
 
 ## What's here
-
-Everything is in Indonesian, like the original. Listing data is hardcoded in `apps/web/src/domain/kos/catalog.ts` (30 kos, 7 cities), so there is no backend.
 
 | Route                                                                  | What it does                                                                                                                                                                                                                                                                                                                                                                                               |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -87,6 +83,8 @@ BETTER_AUTH_URL=http://localhost:3001
 ```
 
 ## How I worked with AI
+
+I started with [shadcn/create](https://ui.shadcn.com/create) to get a visual direction, then used AI to break the brief into smaller pieces, scaffold the first pass, and iterate in the browser. I assumed I could get a 1:1 home from Figma capture extensions in under an hour, but skipped that route on purpose.
 
 Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI inside the Zed IDE. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
 
