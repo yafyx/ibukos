@@ -2,7 +2,7 @@
 
 > How well can you use AI to build frontend products effectively and efficiently?
 
-A kos finder inspired by Mamikos. Take-home in `[task.md](./task.md)`. [Demo](https://ibukos.yfyx.dev).
+A kos finder inspired by Mamikos. Take-home in [task.md](./task.md). [Demo](https://ibukos.yfyx.dev).
 
 [TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev).
 
@@ -10,7 +10,7 @@ I shipped the home page inside the 3–5 hour window. Everything after that was 
 
 `/login` and `/dashboard` are [Better-T-Stack](https://better-t-stack.dev) leftovers. [Better Auth](https://www.better-auth.com) is wired with no database. Removing them wasn't worth the time.
 
-## On How I used the agent
+## On how I used the agent
 
 I started with [Better-T-Stack](https://better-t-stack.dev), the CLI that scaffolds a TypeScript monorepo. Mine came with TanStack Start, Tailwind, Biome, Turborepo, and Better Auth. Then [shadcn/create](https://ui.shadcn.com/create) for the UI. The agent sliced the brief and we iterated in the browser. **I assumed I could get a 1:1 home from Figma capture extensions in under an hour, but skipped that route on purpose.**
 
@@ -21,7 +21,7 @@ What worked was pointing at one element and saying what's wrong. In the GUI I us
 Where the agent saved the most time:
 
 - Opening chat. After [Better-T-Stack](https://better-t-stack.dev), I asked it to make a site "inspired or better than mamikos.com named ibukos," with [coss](https://coss.com/ui) and the shadcn registry, light as the default, dark switch in the footer, Hugeicons, Embla. Workers on Composer. Grok 4.6 High only for judging. Then "implement all available coss ui components," then "i mean not use all of components but always make use the coss ui components."
-- `/cari`. I ran this through [pstack](#on-supervision-is-the-job) (`/poteto-mode`). Copy [Zumper](https://www.zumper.com/apartments-for-rent/san-francisco-ca), Leaflet, better than Mamikos, `/emil-design-eng` always, this branch. Next message. "dont use cua dirver." I didn't want a computer-use agent driving the browser. What happened next (map the search domain, four architecture candidates, one [LLM-as-a-judge](https://arxiv.org/abs/2306.05685)) is in that section. The winner shipped.
+- `/cari`. I ran this through [pstack](#on-supervision-as-the-job) (`/poteto-mode`). Copy [Zumper](https://www.zumper.com/apartments-for-rent/san-francisco-ca), Leaflet, better than Mamikos, `/emil-design-eng` always, this branch. Next message. "dont use cua dirver." I didn't want a computer-use agent driving the browser. What happened next (map the search domain, four architecture candidates, one [LLM-as-a-judge](https://arxiv.org/abs/2306.05685)) is in that section. The winner shipped.
 - SEO. "now maximizes the seo for this sites." Then "dont verify the output." Then "use [takumi.kane.tw](https://takumi.kane.tw/) for OG images." Landings, [JSON-LD](https://json-ld.org), sitemap, OG routes came out of that.
 
 Where it went sideways:
@@ -36,19 +36,28 @@ Skills I used:
 - `better-interface`. Layout, a11y, type, color, copy. The judge after a revamp.
 - `coss` / `coss-particles`. Component patterns from the coss registry.
 - `animate` / `find-animation-opportunities`. What to move, and how.
-- `poteto-mode`. pstack .
+- `poteto-mode`. pstack orchestrator.
 - `no-ai-slop` / `human-writing`. Copy passes.
-- `tanstack-start`. 
+- `tanstack-start`.  Best practives for guiding agents.
 - `thermo-nuclear-code-quality-review`. One code review.
 - `cloudflare`. Deploy.
 
 The agent also pulled `better-ui`, `better-layout`, and `better-accessibility` on its own.
 
-## On supervision is the job
+MCP and tools:
 
-Most of the orchestration (`poteto-mode`, `architect`, `arena`) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you." First time I used it, I was working in a git worktree. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks off by two pixels. My job was that second half.
+- [zvec-grep](https://github.com/zvec-ai/zvec-grep). Local hybrid search over [MCP](https://modelcontextprotocol.io). Ripgrep, BM25, and vectors, so the agent can ask how promo folders get rendered without knowing `listing-row.tsx`. I had been on [Semble](https://github.com/minishlab/semble) for a long time. This repo is me giving zg a try.
+- [Cursor's browser](https://cursor.com/docs/agent/tools/browser). Click and screenshot the running app.
+- [Firecrawl](https://www.firecrawl.dev). Full-page scrape of a reference.
+- Cloudflare docs MCP. Workers deploy, custom domain, `process.env`.
+
+## On supervision as the job
+
+Most of the orchestration (`poteto-mode`, `architect`, `arena`) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you" ([pt. 2](https://x.com/poteto/status/2097732320606507506)). First time I used it, I was working in a git worktree. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks off by two pixels. My job was that second half.
 
 Through `poteto-mode` I used `never-block-on-the-human`. The agent read that rule eight times. Stop asking and go. Lauren plans through code. Prototypes let agents answer their own questions with evidence instead of waiting. For UI I don't have the plan until I see something wrong. Eight of my prompts start with "i mean." Twenty-three start with a screenshot, usually with rulers from [Mesurer](https://mesurer.dev/). An interview at 2am would have produced a confident spec for a layout I'd have rejected on sight. A wrong version I can point at costs one message. She wrote that abstract plans only give you the illusion of progress.
+
+There's a ritual for this. `grill-me` before any code, so the plan survives a long session. Relentless interview, every answer written down, human in the loop until you've invented the homepage on paper. **I don't use it.** That's overkill for cloning a UI. I still plan. In my head, through the code, by doing.
 
 Architecture is the exception. For `/cari` I pointed at Zumper and Mamikos and said copy that, better, Leaflet. The architect run wrote the rubric. Four agents proposed. One graded.
 
@@ -56,7 +65,7 @@ If an agent can't verify its own work, nothing else matters. You remain the bott
 
 Cheap fast workers write, one expensive model reads and scores. Grok only ever read. It graded those four candidates and picked the one that shipped. `/cari` is the best-structured part of the repo because of that review. It cost a fraction of running the whole build on the expensive model. If I only had budget for one expensive call, I'd spend it on the judge again.
 
-## On The interface
+## On the interface
 
 Home has a [command palette](https://en.wikipedia.org/wiki/Command_palette) in the hero, then promo folders by city, featured listings, popular areas and campuses. `/cari` is a [Zumper](https://www.zumper.com)-style [split view](https://developer.apple.com/design/human-interface-guidelines/split-views). List on one side, map on the other. A [segmented control](https://developer.apple.com/design/human-interface-guidelines/segmented-controls) switches Daftar / Gabungan / Peta. Filters, sort, and committed map bounds live in the URL. A listing is `/kos/$slug`. `/kota/*`, `/kampus/$slug`, and `/tipe/$gender` are [programmatic SEO](https://ahrefs.com/blog/programmatic-seo) landings into `/cari`. Crawlers get `/og/*`, `/sitemap.xml`, and `/robots.txt`.
 
@@ -90,9 +99,11 @@ Daftar / Gabungan / Peta. The panes resize; nothing else animates. Pins are Leaf
 
 ![Listing detail](docs/screenshots/kos-detail.gif)
 
-## Decisions worth explaining
+## On decisions worth explaining
 
 shadcn/create picked Base UI. Radix is still supported. I followed the default and kept moving.
+
+Better-T-Stack shipped [Biome](https://biomejs.dev) as the linter and the formatter. I kept it so the agent had one `bun run check`, instead of [ESLint](https://eslint.org) and a separate format step. In the video I explain why I didn't switch.
 
 Search state is in the URL. `parseSearchQuery` validates the search object and feeds `searchListings`. While the map is moving, bounds stay in the map. "Cari di area ini" commits them. Back and forward get a stable search without navigating on every drag.
 
@@ -108,9 +119,15 @@ I used Embla for the photo strip. I did not want to write swipe and thumbnail be
 
 Light is the default. `theme-provider.tsx` sets light and disables system theme. The switch lives in the footer so the header can stay on search and nav.
 
-## SEO without Next.js
+## On SEO without Next.js
 
-A listing site lives on search traffic, and Next.js is the default answer: Metadata API, `sitemap.ts`, `robots.ts`, `next/og`. I picked TanStack Start anyway, for `/cari`. That page is a URL with 13 typed search params, and TanStack Router validates every one at the route boundary. That mattered more than free metadata helpers. I bet the agent could rebuild the SEO layer in an hour. It took about forty minutes.
+A listing site lives on search traffic. Next.js is well known for this. Metadata API, `sitemap.ts`, `robots.ts`, `next/og`. Those helpers are good.
+
+I used TanStack Start. In `/cari` page is a URL with 13 typed search params, and TanStack Router validates every one at the route boundary. The SEO layer still had to ship. 
+
+Agents can write greenfield from skills now. I bet it would take an hour. It took about forty minutes.
+
+(🇵🇸🇵🇸) I don't pick Next.js unless I really need it, or I'm stuck with it. This brief didn't. The agent will follow the default I give it (also frontier AI rn are capable of producing good code). I have to be the one who looks, and who picks something else when I can.
 
 What shipped, all under `apps/web/src/domain/seo/`:
 
