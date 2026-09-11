@@ -10,126 +10,128 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
-  const navigate = useNavigate({
-    from: "/",
-  });
-  const { isPending } = authClient.useSession();
+export default function SignInForm({
+	onSwitchToSignUp,
+}: {
+	onSwitchToSignUp: () => void;
+}) {
+	const navigate = useNavigate({
+		from: "/",
+	});
+	const { isPending } = authClient.useSession();
 
-  const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    onSubmit: async ({ value }) => {
-      await authClient.signIn.email(
-        {
-          email: value.email,
-          password: value.password,
-        },
-        {
-          onSuccess: () => {
-            navigate({
-              to: "/dashboard",
-            });
-            toast.success("Sign in successful");
-          },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
-    },
-  });
+	const form = useForm({
+		defaultValues: {
+			email: "",
+			password: "",
+		},
+		onSubmit: async ({ value }) => {
+			await authClient.signIn.email(
+				{
+					email: value.email,
+					password: value.password,
+				},
+				{
+					onSuccess: () => {
+						navigate({
+							to: "/dashboard",
+						});
+						toast.success("Berhasil masuk");
+					},
+					onError: (error) => {
+						toast.error(error.error.message || error.error.statusText);
+					},
+				},
+			);
+		},
+		validators: {
+			onSubmit: z.object({
+				email: z.email("Alamat email tidak valid"),
+				password: z.string().min(8, "Kata sandi minimal 8 karakter"),
+			}),
+		},
+	});
 
-  if (isPending) {
-    return <Loader />;
-  }
+	if (isPending) {
+		return <Loader />;
+	}
 
-  return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+	return (
+		<div className="mx-auto flex w-full max-w-md flex-col gap-6">
+			<h1 className="text-pretty text-center font-heading font-semibold text-3xl tracking-tight">
+				Masuk
+			</h1>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-4"
-      >
-        <div>
-          <form.Field name="email">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="email"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
+			<form
+				className="flex flex-col gap-4"
+				onSubmit={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					form.handleSubmit();
+				}}
+			>
+				<form.Field name="email">
+					{(field) => (
+						<div className="flex flex-col gap-2">
+							<Label htmlFor={field.name}>Email</Label>
+							<Input
+								aria-invalid={field.state.meta.errors.length > 0}
+								autoComplete="email"
+								id={field.name}
+								name={field.name}
+								onBlur={field.handleBlur}
+								onChange={(event) => field.handleChange(event.target.value)}
+								type="email"
+								value={field.state.value}
+							/>
+							{field.state.meta.errors.map((error) => (
+								<p className="text-destructive text-sm" key={error?.message}>
+									{error?.message}
+								</p>
+							))}
+						</div>
+					)}
+				</form.Field>
 
-        <div>
-          <form.Field name="password">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="password"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
+				<form.Field name="password">
+					{(field) => (
+						<div className="flex flex-col gap-2">
+							<Label htmlFor={field.name}>Kata sandi</Label>
+							<Input
+								aria-invalid={field.state.meta.errors.length > 0}
+								autoComplete="current-password"
+								id={field.name}
+								name={field.name}
+								onBlur={field.handleBlur}
+								onChange={(event) => field.handleChange(event.target.value)}
+								type="password"
+								value={field.state.value}
+							/>
+							{field.state.meta.errors.map((error) => (
+								<p className="text-destructive text-sm" key={error?.message}>
+									{error?.message}
+								</p>
+							))}
+						</div>
+					)}
+				</form.Field>
 
-        <form.Subscribe
-          selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
-        >
-          {({ canSubmit, isSubmitting }) => (
-            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Sign In"}
-            </Button>
-          )}
-        </form.Subscribe>
-      </form>
+				<form.Subscribe
+					selector={(state) => ({ isSubmitting: state.isSubmitting })}
+				>
+					{({ isSubmitting }) => (
+						<Button className="w-full" disabled={isSubmitting} type="submit">
+							{isSubmitting ? "Masuk…" : "Masuk"}
+						</Button>
+					)}
+				</form.Subscribe>
+			</form>
 
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignUp}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
-          Need an account? Sign Up
-        </Button>
-      </div>
-    </div>
-  );
+			<div className="text-center">
+				<Button onClick={onSwitchToSignUp} variant="link">
+					Belum punya akun? Daftar
+				</Button>
+			</div>
+		</div>
+	);
 }

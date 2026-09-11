@@ -1,3 +1,5 @@
+import { Home01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -8,12 +10,11 @@ import {
 } from "@ibukos/ui/components/breadcrumb";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
-import { KosFacts } from "@/components/kos/facts";
-import { PhotoCarousel } from "@/components/kos/photo-carousel";
-import { ListingCard } from "@/components/search/listing-card";
+import { KosDetailView } from "@/components/kos/detail-view";
 import { createEmptyQuery } from "@/domain/facets/url";
-import { cityLabels } from "@/domain/kos/labels";
 import { getListingBySlug, getSimilarListings } from "@/domain/kos/catalog";
+import { seoHead } from "@/domain/seo/head";
+import { listingDocument } from "@/domain/seo/pages";
 
 export const Route = createFileRoute("/kos/$slug")({
 	loader: ({ params }) => {
@@ -26,6 +27,12 @@ export const Route = createFileRoute("/kos/$slug")({
 			similar: getSimilarListings(params.slug),
 		};
 	},
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return {};
+		}
+		return seoHead(listingDocument(loaderData.listing));
+	},
 	component: KosDetailPage,
 });
 
@@ -33,40 +40,43 @@ function KosDetailPage() {
 	const { listing, similar } = Route.useLoaderData();
 
 	return (
-		<main className="page-shell flex flex-col gap-8 py-6">
+		<main
+			className="page-shell flex flex-col gap-8 py-8 pb-28 lg:pb-8"
+			id="main"
+			tabIndex={-1}
+		>
 			<Breadcrumb>
-				<BreadcrumbList>
+				<BreadcrumbList className="flex-nowrap gap-2 overflow-hidden">
 					<BreadcrumbItem>
-						<BreadcrumbLink render={<Link to="/" />}>Beranda</BreadcrumbLink>
+						<BreadcrumbLink
+							aria-label="Beranda"
+							className="inline-flex items-center"
+							render={<Link to="/" />}
+						>
+							<HugeiconsIcon
+								aria-hidden="true"
+								className="size-4"
+								icon={Home01Icon}
+								strokeWidth={1.5}
+							/>
+						</BreadcrumbLink>
 					</BreadcrumbItem>
-					<BreadcrumbSeparator />
+					<BreadcrumbSeparator>/</BreadcrumbSeparator>
 					<BreadcrumbItem>
-						<BreadcrumbLink render={<Link search={createEmptyQuery()} to="/cari" />}>
+						<BreadcrumbLink
+							render={<Link search={createEmptyQuery()} to="/cari" />}
+						>
 							Cari kos
 						</BreadcrumbLink>
 					</BreadcrumbItem>
-					<BreadcrumbSeparator />
-					<BreadcrumbItem>
-						<BreadcrumbPage>{listing.name}</BreadcrumbPage>
+					<BreadcrumbSeparator>/</BreadcrumbSeparator>
+					<BreadcrumbItem className="min-w-0">
+						<BreadcrumbPage className="truncate">{listing.name}</BreadcrumbPage>
 					</BreadcrumbItem>
 				</BreadcrumbList>
 			</Breadcrumb>
 
-			<PhotoCarousel alt={listing.name} photos={listing.photos} />
-			<KosFacts listing={listing} />
-
-			{similar.length > 0 ? (
-				<section className="flex flex-col gap-3">
-					<h2 className="font-heading text-lg font-semibold tracking-tight">
-						Kos serupa di {cityLabels[listing.city]}
-					</h2>
-					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-						{similar.map((item) => (
-							<ListingCard key={item.slug} listing={item} />
-						))}
-					</div>
-				</section>
-			) : null}
+			<KosDetailView listing={listing} similar={similar} />
 		</main>
 	);
 }

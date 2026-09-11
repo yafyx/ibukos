@@ -11,16 +11,32 @@ import {
 	PopoverTrigger,
 } from "@ibukos/ui/components/popover";
 import { Textarea } from "@ibukos/ui/components/textarea";
-import { type FormEvent, useState } from "react";
+import { cn } from "@ibukos/ui/lib/utils";
+import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import type { KosDetail } from "@/domain/kos/types";
+import { viewEnter } from "@/lib/motion";
 
-export function InquireForm({ listing }: { listing: KosDetail }) {
-	const [moveIn, setMoveIn] = useState<Date>();
-	const [open, setOpen] = useState(false);
-	const [pickingDate, setPickingDate] = useState(false);
-
+export function InquireForm({
+	listing,
+	open,
+	onOpenChange,
+	pickingDate,
+	onPickingDateChange,
+	moveIn,
+	onMoveInChange,
+	className,
+}: {
+	listing: KosDetail;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	pickingDate: boolean;
+	onPickingDateChange: (picking: boolean) => void;
+	moveIn: Date | undefined;
+	onMoveInChange: (date: Date | undefined) => void;
+	className?: string;
+}) {
 	function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const data = new FormData(event.currentTarget);
@@ -29,8 +45,8 @@ export function InquireForm({ listing }: { listing: KosDetail }) {
 			return;
 		}
 		toast.success(`Pesan terkirim ke ${listing.ownerLabel}`);
-		setOpen(false);
-		setPickingDate(false);
+		onOpenChange(false);
+		onPickingDateChange(false);
 	}
 
 	const moveInLabel = moveIn
@@ -44,19 +60,39 @@ export function InquireForm({ listing }: { listing: KosDetail }) {
 	return (
 		<Popover
 			onOpenChange={(next) => {
-				setOpen(next);
+				onOpenChange(next);
 				if (!next) {
-					setPickingDate(false);
+					onPickingDateChange(false);
 				}
 			}}
 			open={open}
 		>
-			<PopoverTrigger render={<Button />}>Hubungi pemilik</PopoverTrigger>
-			<PopoverPopup className="w-80">
+			<PopoverTrigger
+				render={
+					<Button
+						className={cn(
+							"h-11 min-w-36 flex-1 text-sm lg:h-9 lg:w-full lg:min-w-0",
+							className,
+						)}
+					/>
+				}
+			>
+				Tanya ketersediaan
+			</PopoverTrigger>
+			<PopoverPopup
+				align="end"
+				className={cn(
+					pickingDate
+						? "w-auto max-w-[calc(100vw-2rem)]"
+						: "w-[min(20rem,calc(100vw-2rem))]",
+				)}
+				side="top"
+			>
 				{pickingDate ? (
-					<div className="flex flex-col gap-3">
+					<div className={cn(viewEnter, "flex w-auto flex-col gap-2")}>
 						<Button
-							onClick={() => setPickingDate(false)}
+							className="self-start"
+							onClick={() => onPickingDateChange(false)}
 							size="sm"
 							type="button"
 							variant="ghost"
@@ -66,30 +102,39 @@ export function InquireForm({ listing }: { listing: KosDetail }) {
 						<Calendar
 							mode="single"
 							onSelect={(date) => {
-								setMoveIn(date);
-								setPickingDate(false);
+								onMoveInChange(date);
+								onPickingDateChange(false);
 							}}
 							selected={moveIn}
 						/>
 					</div>
 				) : (
-					<Form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+					<Form
+						className={cn(viewEnter, "flex w-full flex-col gap-3")}
+						onSubmit={handleSubmit}
+					>
 						<p className="font-heading font-medium text-sm">
 							Hubungi {listing.ownerLabel}
 						</p>
 						<Field>
 							<FieldLabel>Nama</FieldLabel>
-							<Input name="nama" required />
+							<Input autoComplete="name" name="nama" required />
 						</Field>
 						<Field>
 							<FieldLabel>Nomor WhatsApp</FieldLabel>
-							<Input inputMode="tel" name="telepon" required type="tel" />
+							<Input
+								autoComplete="tel"
+								inputMode="tel"
+								name="telepon"
+								required
+								type="tel"
+							/>
 						</Field>
-						<Field>
+						<Field className="w-full">
 							<FieldLabel>Tanggal masuk</FieldLabel>
 							<Button
-								className="w-full justify-start"
-								onClick={() => setPickingDate(true)}
+								className="w-full justify-start font-normal"
+								onClick={() => onPickingDateChange(true)}
 								type="button"
 								variant="outline"
 							>

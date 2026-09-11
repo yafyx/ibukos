@@ -18,7 +18,11 @@ export default function UserMenu() {
 
 	if (!session) {
 		return (
-			<Button render={<Link to="/login" />} size="sm" variant="outline">
+			<Button
+				nativeButton={false}
+				render={<Link to="/login" />}
+				variant="outline"
+			>
 				Masuk
 			</Button>
 		);
@@ -26,7 +30,7 @@ export default function UserMenu() {
 
 	return (
 		<Menu>
-			<MenuTrigger render={<Button size="sm" variant="outline" />}>
+			<MenuTrigger render={<Button variant="outline" />}>
 				{session.user.name}
 			</MenuTrigger>
 			<MenuPopup align="end">
