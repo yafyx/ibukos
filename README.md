@@ -1,6 +1,8 @@
 # Ibukos
 
-A Mamikos-style kos (boarding house) finder, built for a frontend take-home that asks one thing: how well can you use AI to ship an interface? The brief is in [task.md](./task.md). The minimum was the home page. I went further because the search page had the interesting decisions.
+A kos finder inspired by Mamikos. Built for Mamikos FE take-homem How well can you use AI to ship an interface? The brief is in [task.md](./task.md). Minimum was the home page. I shipped that inside the 3-5 hour window, then spent optional time on...
+
+A 1:1 home via Figma capture extensions is a short path I could have taken. I skipped it on purpose.
 
 - Demo: [ibukos.yfyx.dev](https://ibukos.yfyx.dev)
 - Stack: [TanStack Start](https://tanstack.com/start) (React 19, SSR), [Tailwind v4](https://tailwindcss.com), [coss](https://coss.com/ui) and [shadcn](https://ui.shadcn.com) components on [Base UI](https://base-ui.com), [Leaflet](https://leafletjs.com), [Bun](https://bun.sh), [Turborepo](https://turborepo.dev), [Biome](https://biomejs.dev)
@@ -86,9 +88,9 @@ BETTER_AUTH_URL=http://localhost:3001
 
 ## How I worked with AI
 
-Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
+Cursor was the editor until the screen recording chewed the laptop. Browser and Cursor started taking forever to open, so I switched to Cursor CLI inside the Zed IDE. Nearly every change still went through the agent; I steered, checked the browser, and pushed back. About nine hours in one overnight session, longer than the brief's 3 to 5, mostly polishing the search page.
 
-What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner." One issue per message. Broad prompts like "make this less generic" got broad, generic output and three or four follow-ups.
+What worked was pointing at one element and saying what's wrong. In the GUI, Cursor attaches the selected DOM node to the prompt, so most messages read like "fix the fade on this still not respecting the image rounded corner." One issue per message.
 
 After the CLI switch, [react-grab](https://github.com/aidenybai/react-grab) saved me the most. DEV-only import in `__root.tsx`. I clicked the broken bit in the page, copied the component context, pasted it into the CLI. Same "this corner" habit as attaching a DOM node in the GUI, except I didn't sit around waiting for Cursor to open.
 
@@ -108,8 +110,6 @@ Where it went sideways:
 
 ### Skills and models
 
-I ran `skilled` again. It still doesn't index Cursor (Claude Code, Codex, Droid, OpenCode, Grok CLI only), so the counts below are from the 53 Cursor chats in this repo, plus Cursor's usage events for those conversations.
-
 Skills I attached by hand:
 
 | Skill                                                                                                                    | Times  | What it's for                                                                                    |
@@ -126,11 +126,9 @@ Skills I attached by hand:
 
 The agent also read skills on its own: `better-ui` (17), `better-layout` (14), `better-accessibility` (12), `architect` (10), and the pstack principle files that `poteto-mode` loads before nontrivial changes.
 
-The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. Later polish chats mixed in Composer 2.5 Fast and Auto. I asked for 21 subagent launches. 267 requests, all marked included in Pro+. Listed cost $222.40. None of it went to on-demand; Pro+ ate it. Cache reads are most of the burn, which is how these long agent threads work. Grok 4.6 High was 111 of those requests. Composer 2.5 Fast was 101.
+The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. Later polish chats mixed in Composer 2.5 Fast and Auto. I asked for 21 subagent launches. 267 requests, cost about $222.40.
 
 ### Takes
-
-Four things I'd tell someone doing this test next week.
 
 **Supervision is the job.** Most of the orchestration here (`poteto-mode`, `architect`, `arena`, the principle files) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you." I was skeptical of that framing and then spent nine hours living it. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks "off" by two pixels. My job was that second half.
 
