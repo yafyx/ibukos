@@ -1,0 +1,17 @@
+{
+	"name": "Ibukos",
+	"short_name": "Ibukos",
+	"description": "Cari kos putra, putri, dan campur di Indonesia. Lihat harga, fasilitas, lalu sewa dari Ibukos.",
+	"start_url": "/",
+	"display": "standalone",
+	"lang": "id",
+	"background_color": "#ffffff",
+	"theme_color": "#247a4a",
+	"icons": [
+		{
+			"src": "/brand/ibukos-ibu.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		}
+	]
+}
