@@ -1,10 +1,17 @@
 "use client";
 
-import { Button } from "@ibukos/ui/components/button";
 import { cn } from "@ibukos/ui/lib/utils";
-import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
+import useEmblaCarousel, {
+	type UseEmblaCarouselType,
+} from "embla-carousel-react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import * as React from "react";
+
+const carouselEdgeClassName =
+	"hover-fine-reveal absolute inset-y-0 z-20 flex w-[min(36%,6rem)] cursor-pointer items-center border-0 bg-transparent p-0 before:pointer-events-none before:absolute before:inset-0 before:content-['']";
+
+const carouselEdgeIconClassName =
+	"relative z-10 size-4 shrink-0 text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.45)]";
 
 type CarouselApi = UseEmblaCarouselType[1];
 
@@ -95,7 +102,11 @@ function Carousel({
 				snapCount,
 			}}
 		>
-			<div className={cn("relative", className)} data-slot="carousel" {...props}>
+			<div
+				className={cn("group/carousel relative", className)}
+				data-slot="carousel"
+				{...props}
+			>
 				{children}
 			</div>
 		</CarouselContext.Provider>
@@ -105,8 +116,19 @@ function Carousel({
 function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
 	const { carouselRef } = useCarousel();
 	return (
-		<div className="overflow-hidden" data-slot="carousel-viewport" ref={carouselRef}>
-			<div className={cn("flex", className)} data-slot="carousel-content" {...props} />
+		<div
+			className="touch-pan-y overflow-hidden"
+			data-slot="carousel-viewport"
+			ref={carouselRef}
+		>
+			<div
+				className={cn(
+					"flex touch-pan-y touch-pinch-zoom select-none",
+					className,
+				)}
+				data-slot="carousel-content"
+				{...props}
+			/>
 		</div>
 	);
 }
@@ -121,39 +143,73 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-function CarouselPrevious({ className, ...props }: React.ComponentProps<typeof Button>) {
+function CarouselPrevious({
+	className,
+	onClick,
+	...props
+}: React.ComponentProps<"button">) {
 	const { scrollPrev, canScrollPrev } = useCarousel();
+
+	if (!canScrollPrev) {
+		return null;
+	}
+
 	return (
-		<Button
+		<button
 			aria-label="Slide sebelumnya"
-			className={cn(className)}
-			disabled={!canScrollPrev}
-			onClick={scrollPrev}
-			size="icon"
+			className={cn(
+				carouselEdgeClassName,
+				"start-0 justify-start ps-4 before:bg-linear-to-r before:from-black/55 before:via-black/25 before:to-transparent",
+				className,
+			)}
+			onClick={(event) => {
+				event.stopPropagation();
+				onClick?.(event);
+				scrollPrev();
+			}}
 			type="button"
-			variant="outline"
 			{...props}
 		>
-			<ChevronLeftIcon />
-		</Button>
+			<ChevronLeftIcon
+				aria-hidden="true"
+				className={carouselEdgeIconClassName}
+			/>
+		</button>
 	);
 }
 
-function CarouselNext({ className, ...props }: React.ComponentProps<typeof Button>) {
+function CarouselNext({
+	className,
+	onClick,
+	...props
+}: React.ComponentProps<"button">) {
 	const { scrollNext, canScrollNext } = useCarousel();
+
+	if (!canScrollNext) {
+		return null;
+	}
+
 	return (
-		<Button
+		<button
 			aria-label="Slide berikutnya"
-			className={cn(className)}
-			disabled={!canScrollNext}
-			onClick={scrollNext}
-			size="icon"
+			className={cn(
+				carouselEdgeClassName,
+				"end-0 justify-end pe-4 before:bg-linear-to-l before:from-black/55 before:via-black/25 before:to-transparent",
+				className,
+			)}
+			onClick={(event) => {
+				event.stopPropagation();
+				onClick?.(event);
+				scrollNext();
+			}}
 			type="button"
-			variant="outline"
 			{...props}
 		>
-			<ChevronRightIcon />
-		</Button>
+			<ChevronRightIcon
+				aria-hidden="true"
+				className={carouselEdgeIconClassName}
+			/>
+		</button>
 	);
 }
 
@@ -178,7 +234,10 @@ function CarouselDots({ className }: { className?: string }) {
 						index === selectedIndex ? "scale-125 bg-white" : "bg-white/55",
 					)}
 					key={String(index)}
-					onClick={() => scrollTo(index)}
+					onClick={(event) => {
+						event.stopPropagation();
+						scrollTo(index);
+					}}
 					type="button"
 				/>
 			))}

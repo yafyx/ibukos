@@ -53,17 +53,16 @@ export function Calendar({
     weekday:
       "size-(--cell-size) p-0 text-xs font-medium text-muted-foreground/72",
   };
-  const mergedClassNames: typeof defaultClassNames = Object.keys(
-    defaultClassNames,
-  ).reduce(
+  const mergedClassNames: typeof defaultClassNames = Object.keys({
+    ...defaultClassNames,
+    ...classNames,
+  }).reduce(
     (acc, key) => {
       const userClass = classNames?.[key as keyof typeof classNames];
       const baseClass =
         defaultClassNames[key as keyof typeof defaultClassNames];
 
-      acc[key as keyof typeof defaultClassNames] = userClass
-        ? cn(baseClass, userClass)
-        : baseClass;
+      acc[key as keyof typeof defaultClassNames] = cn(baseClass, userClass);
 
       return acc;
     },
