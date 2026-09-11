@@ -45,9 +45,9 @@ A Base UI `Toggle` persisted to [`localStorage`](https://developer.mozilla.org/e
 
 ![Switching promo folders by city](docs/screenshots/promo-folder.gif)
 
-The geometry is from Emil Kowalski's [Next.js Dev Tools notch](https://devouringdetails.com/prototypes/nextjs-dev-tools). You can't draw an S-curve corner in CSS. His fix is to export the tail as SVG from Figma and glue it to a normal HTML box, so the label can grow without breaking the curve. I used the same trick on "Kos yang lagi promo". Seven city tabs have to look like one folder, and the count expands when the city is active.
+You can't draw an S-curve corner in CSS. I learned that from Emil Kowalski's [Devouring Details notch](https://devouringdetails.com/prototypes/nextjs-dev-tools): export the tail as SVG and glue it to a normal HTML box so the label can grow without breaking the curve. I didn't drop his overlay in. I rebuilt the idea for "Kos yang lagi promo", where seven city tabs have to read as one folder and the count expands when a city is active.
 
-Each city is a `FolderNotch`. The HTML box holds the name and count. An SVG S-curve (the same 60×42 path as the Next.js overlay) is glued to the right, and the next city overlaps that tail by 16px so the top stroke looks continuous. The active city fills in, gets a darker outline, rises 4px, and grows a longer S on the right. If it isn't first, a mirrored S appears on its left, and the city before it hides its own tail so the two curves don't meet in a valley. The neighbour's top line over each crook is HTML, pinned to the row top, so it stays put when the active city rises.
+Each city is a `FolderNotch`. The HTML box holds the name and count. An SVG S-curve is glued to the right, and the next city overlaps that tail by 16px so the top stroke looks continuous. The active city fills in, gets a darker outline, rises 4px, and grows a longer S on the right. If it isn't first, a mirrored S appears on its left, and the city before it hides its own tail so the two curves don't meet in a valley. The neighbour's top line over each crook is HTML, pinned to the row top, so it stays put when the active city rises.
 
 Switching cities changes widths, overlaps, and which tails exist. Labels must not stretch while that happens. `useFlip` runs [FLIP](https://aerotwist.com/blog/flip-your-animations/). It snapshots every `[data-flip]` node before the state change, inverts the delta with `translate` and `scale` after layout, and plays back to identity in 200ms. Boxes marked `data-flip="x"` only slide; the fill and tails are the parts that stretch. Mid-flight switches cancel the running animations and snapshot from the visual position, so you can spam the tabs without a jump. The cards fade in with `@starting-style`. The count is `tabular-nums` so "2" and "1" don't shove the name around.
 
@@ -55,8 +55,8 @@ The twenty messages in the session were almost all this geometry. Red rulers on 
 
 ### Search page: list, map, and the toggle
 
-| Desktop split                                    | Mobile                                                                |
-| ------------------------------------------------ | --------------------------------------------------------------------- |
+| Desktop split                                                 | Mobile                                                                |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
 | ![Toggle List / Split / Map](docs/screenshots/cari-views.gif) | ![Mobile list with floating toggle](docs/screenshots/cari-mobile.png) |
 
 - Daftar / Gabungan / Peta is a `ToggleGroup`. `commitView` in `cari/workspace.tsx` wraps the state change and the navigate in `startTransition`, tagged with [`addTransitionType("cari-view")`](https://react.dev/reference/react/addTransitionType). The `cari-list` and `cari-map` `ViewTransition`s map that type to `.layout`, so the panes resize over `--duration-move` and nothing else animates. Every other update is `default="none"`.
@@ -119,16 +119,16 @@ I ran `skilled` again. It still doesn't index Cursor (Claude Code, Codex, Droid,
 
 Skills I attached by hand:
 
-| Skill                                                                                          | Times  | What it's for                                                                                    |
-| ---------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `emil-design-eng`                                                                              | 24     | Emil Kowalski's rules for motion, hover states, and polish. On almost every UI prompt.           |
-| `better-interface`                                                                             | 17     | Cross-discipline UI review (layout, a11y, typography, color, copy). The judge after each revamp. |
-| `no-ai-slop`                                                                                   | 8      | Copy passes on the footer and this README.                                                       |
-| `coss-particles`, `coss`                                                                       | 7      | Component patterns from the coss registry.                                                       |
-| `human-writing`                                                                                | 4      | Same job as `no-ai-slop`, earlier in the session.                                                |
-| `poteto-mode`                                                                                  | 3      | Orchestration that runs explore, architect, and judge agents. Used for `/cari`.                  |
-| `animate`                                                                                      | 3      | Picks properties, curves, and durations for a new animation.                                     |
-| `find-animation-opportunities`                                                                 | 2      | Motion audit.                                                                                    |
+| Skill                                                                                                                    | Times  | What it's for                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------ |
+| `emil-design-eng`                                                                                                        | 24     | Emil Kowalski's rules for motion, hover states, and polish. On almost every UI prompt.           |
+| `better-interface`                                                                                                       | 17     | Cross-discipline UI review (layout, a11y, typography, color, copy). The judge after each revamp. |
+| `no-ai-slop`                                                                                                             | 8      | Copy passes on the footer and this README.                                                       |
+| `coss-particles`, `coss`                                                                                                 | 7      | Component patterns from the coss registry.                                                       |
+| `human-writing`                                                                                                          | 4      | Same job as `no-ai-slop`, earlier in the session.                                                |
+| `poteto-mode`                                                                                                            | 3      | Orchestration that runs explore, architect, and judge agents. Used for `/cari`.                  |
+| `animate`                                                                                                                | 3      | Picks properties, curves, and durations for a new animation.                                     |
+| `find-animation-opportunities`                                                                                           | 2      | Motion audit.                                                                                    |
 | `tanstack-start`, `thermo-nuclear-code-quality-review`, `cloudflare`, `technical-writing`, `term-radar`, `anthropic-art` | 1 each | Docs, one code review, deploy, and a brand illustration I threw away for my own.                 |
 
 The agent also read skills on its own: `better-ui` (17), `better-layout` (14), `better-accessibility` (12), `architect` (10), and the pstack principle files (`model-the-domain`, `boundary-discipline`, `prove-it-works`, and others) that `poteto-mode` loads before nontrivial changes.
@@ -137,18 +137,18 @@ The overnight chat, and most of the `/cari` work, ran on Cursor Grok 4.6 High. L
 
 What Cursor actually billed, 267 requests, all marked included in Pro+:
 
-| Model                            | Requests | Input     | Output    | Cache write | Cache read | Listed cost |
-| -------------------------------- | -------- | --------- | --------- | ----------- | ---------- | ----------- |
-| Cursor Grok 4.6 High             | 111      | 10.5M     | 1.54M     | 0           | 186M       | $123.76     |
-| Composer 2.5 Fast                | 101      | 2.68M     | 564k      | 0           | 61.3M      | $46.39      |
-| Claude Fable 5.1 Thinking High   | 14       | 492       | 215k      | 757k        | 38.8M      | $29.89      |
-| Cursor Grok 4.6 Medium Fast      | 1        | 548k      | 25k       | 0           | 6.68M      | $9.17       |
-| Cursor Grok 4.6 Extra High       | 11       | 755k      | 163k      | 0           | 9.81M      | $7.39       |
-| Auto (`default`)                 | 14       | 632k      | 55k       | 0           | 4.23M      | $3.71       |
-| Cursor Grok 4.6 Medium           | 10       | 322k      | 23k       | 0           | 2.25M      | $1.91       |
-| GPT-5.6 Luna Extra High          | 4        | 168       | 9k        | 120k        | 6.12M      | $0.16       |
-| GPT-5.6 Luna Medium              | 1        | 39        | 5k        | 34k         | 355k       | $0.02       |
-| **Total**                        | **267**  | **15.4M** | **2.60M** | **0.91M**   | **315M**   | **$222.40** |
+| Model                          | Requests | Input     | Output    | Cache write | Cache read | Listed cost |
+| ------------------------------ | -------- | --------- | --------- | ----------- | ---------- | ----------- |
+| Cursor Grok 4.6 High           | 111      | 10.5M     | 1.54M     | 0           | 186M       | $123.76     |
+| Composer 2.5 Fast              | 101      | 2.68M     | 564k      | 0           | 61.3M      | $46.39      |
+| Claude Fable 5.1 Thinking High | 14       | 492       | 215k      | 757k        | 38.8M      | $29.89      |
+| Cursor Grok 4.6 Medium Fast    | 1        | 548k      | 25k       | 0           | 6.68M      | $9.17       |
+| Cursor Grok 4.6 Extra High     | 11       | 755k      | 163k      | 0           | 9.81M      | $7.39       |
+| Auto (`default`)               | 14       | 632k      | 55k       | 0           | 4.23M      | $3.71       |
+| Cursor Grok 4.6 Medium         | 10       | 322k      | 23k       | 0           | 2.25M      | $1.91       |
+| GPT-5.6 Luna Extra High        | 4        | 168       | 9k        | 120k        | 6.12M      | $0.16       |
+| GPT-5.6 Luna Medium            | 1        | 39        | 5k        | 34k         | 355k       | $0.02       |
+| **Total**                      | **267**  | **15.4M** | **2.60M** | **0.91M**   | **315M**   | **$222.40** |
 
 $222.40 is Cursor's listed price for those tokens. None of it went to on-demand; Pro+ ate it. Cache reads are most of the burn, which is how these long agent threads work.
 
@@ -242,4 +242,8 @@ Ibukos runs every image through `absoluteUrl()` in `seoHead()`, so production ta
 
 ## What I'd do with more time
 
-Real coordinates and a real data source. Working auth, or remove it. [Virtualize](https://tanstack.com/virtual) the `/cari` list once the catalog passes 30. And cut the promo folder earlier; fun, but twenty messages for a curve.
+Real coordinates and a real data source. Working auth, or remove it. [Virtualize](https://tanstack.com/virtual) the `/cari` list once the catalog passes 30.
+
+The rest is continuous improvement like the promo folder: overlay on, drag the radius, watch the morph, stop when it looks right. Twenty messages for that curve was enough for a take-home. With more time I'd keep the loop and ship the debug tooling so the next crook doesn't cost another night.
+
+![Live debug overlay while morphing a tab cutout](docs/screenshots/tab-cutout-debug.gif)
