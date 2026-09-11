@@ -1,4 +1,13 @@
-import type { BadgeId, CitySlug, Duration, FacilityId, Gender, RuleId, SortKey } from "../kos/types";
+import type { CariView, MapBounds } from "../geo";
+import type {
+	BadgeId,
+	CitySlug,
+	Duration,
+	FacilityId,
+	Gender,
+	RuleId,
+	SortKey,
+} from "../kos/types";
 
 export type FacetId =
 	| "q"
@@ -10,7 +19,8 @@ export type FacetId =
 	| "rules"
 	| "available"
 	| "badges"
-	| "sort";
+	| "sort"
+	| "bounds";
 
 export type SearchQuery = {
 	q?: string;
@@ -24,6 +34,8 @@ export type SearchQuery = {
 	availableOnly: boolean;
 	badges: BadgeId[];
 	sort: SortKey;
+	bounds?: MapBounds;
+	view: CariView;
 };
 
 export type ActiveChip = {

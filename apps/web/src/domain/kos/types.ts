@@ -63,9 +63,17 @@ export type PromoSlide = {
 	query?: Partial<import("../facets/types").SearchQuery>;
 };
 
+export type PromoCityGroup = {
+	city: CitySlug;
+	listings: KosListing[];
+};
+
 export type AreaTile = {
 	slug: CitySlug | string;
 	label: string;
+	subtitle?: string;
 	image: string;
 	query: Partial<import("../facets/types").SearchQuery>;
+	/** Accent for campus initials badge */
+	accent?: string;
 };

@@ -1,17 +1,33 @@
+import { parseBounds, parseCariView, serializeBounds } from "../geo";
 import {
 	badgeLabels,
 	cityLabels,
 	durationLabels,
 	facilityLabels,
+	formatPriceFilterLabel,
 	genderLabels,
 	ruleLabels,
-	sortLabels,
 } from "../kos/labels";
-import type { BadgeId, CitySlug, Duration, FacilityId, Gender, KosListing, RuleId, SortKey } from "../kos/types";
+import type {
+	BadgeId,
+	CitySlug,
+	Duration,
+	FacilityId,
+	Gender,
+	KosListing,
+	RuleId,
+	SortKey,
+} from "../kos/types";
 import type { FacetId, SearchQuery } from "./types";
 
 const GENDERS: Gender[] = ["putra", "putri", "campur"];
-const DURATIONS: Duration[] = ["mingguan", "bulanan", "3bulan", "6bulan", "tahunan"];
+const DURATIONS: Duration[] = [
+	"mingguan",
+	"bulanan",
+	"3bulan",
+	"6bulan",
+	"tahunan",
+];
 const SORT_KEYS: SortKey[] = ["recommended", "price-asc", "price-desc"];
 const CITIES: CitySlug[] = [
 	"yogyakarta",
@@ -36,7 +52,10 @@ const FACILITIES: FacilityId[] = [
 const RULES: RuleId[] = ["akses-24jam", "pasutri", "hewan", "karyawan"];
 const BADGES: BadgeId[] = ["promo", "dikelola", "andalan"];
 
-function parseCommaList<T extends string>(raw: string | undefined, allowed: readonly T[]): T[] {
+function parseCommaList<T extends string>(
+	raw: string | undefined,
+	allowed: readonly T[],
+): T[] {
 	if (!raw) {
 		return [];
 	}
@@ -46,7 +65,10 @@ function parseCommaList<T extends string>(raw: string | undefined, allowed: read
 		.filter((part): part is T => allowed.includes(part as T));
 }
 
-function parsePriceRange(raw: unknown): { priceMin?: number; priceMax?: number } {
+function parsePriceRange(raw: unknown): {
+	priceMin?: number;
+	priceMax?: number;
+} {
 	if (typeof raw !== "string" || !raw.includes("-")) {
 		return {};
 	}
@@ -66,7 +88,15 @@ export function createEmptyQuery(): SearchQuery {
 		availableOnly: false,
 		badges: [],
 		sort: "recommended",
+		view: "split",
 	};
+}
+
+function xorCityAndBounds(query: SearchQuery): SearchQuery {
+	if (query.city && query.bounds) {
+		return { ...query, city: undefined };
+	}
+	return query;
 }
 
 export function applyFacet<K extends FacetId>(
@@ -76,21 +106,35 @@ export function applyFacet<K extends FacetId>(
 ): SearchQuery {
 	switch (facetId) {
 		case "q":
-			return { ...query, q: typeof value === "string" && value ? value : undefined };
+			return {
+				...query,
+				q: typeof value === "string" && value ? value : undefined,
+			};
 		case "city":
 			return {
 				...query,
-				city: CITIES.includes(value as CitySlug) ? (value as CitySlug) : undefined,
+				city: CITIES.includes(value as CitySlug)
+					? (value as CitySlug)
+					: undefined,
+				bounds: undefined,
 			};
+		case "bounds": {
+			const bounds = parseBounds(value);
+			return bounds ? { ...query, bounds, city: undefined } : query;
+		}
 		case "gender":
 			return {
 				...query,
-				gender: GENDERS.includes(value as Gender) ? (value as Gender) : undefined,
+				gender: GENDERS.includes(value as Gender)
+					? (value as Gender)
+					: undefined,
 			};
 		case "duration":
 			return {
 				...query,
-				duration: DURATIONS.includes(value as Duration) ? (value as Duration) : undefined,
+				duration: DURATIONS.includes(value as Duration)
+					? (value as Duration)
+					: undefined,
 			};
 		case "price": {
 			const range =
@@ -103,29 +147,40 @@ export function applyFacet<K extends FacetId>(
 			return {
 				...query,
 				facilities: Array.isArray(value)
-					? value.filter((item): item is FacilityId => FACILITIES.includes(item as FacilityId))
+					? value.filter((item): item is FacilityId =>
+							FACILITIES.includes(item as FacilityId),
+						)
 					: parseCommaList(String(value ?? ""), FACILITIES),
 			};
 		case "rules":
 			return {
 				...query,
 				rules: Array.isArray(value)
-					? value.filter((item): item is RuleId => RULES.includes(item as RuleId))
+					? value.filter((item): item is RuleId =>
+							RULES.includes(item as RuleId),
+						)
 					: parseCommaList(String(value ?? ""), RULES),
 			};
 		case "available":
-			return { ...query, availableOnly: value === true || value === "1" || value === 1 };
+			return {
+				...query,
+				availableOnly: value === true || value === "1" || value === 1,
+			};
 		case "badges":
 			return {
 				...query,
 				badges: Array.isArray(value)
-					? value.filter((item): item is BadgeId => BADGES.includes(item as BadgeId))
+					? value.filter((item): item is BadgeId =>
+							BADGES.includes(item as BadgeId),
+						)
 					: parseCommaList(String(value ?? ""), BADGES),
 			};
 		case "sort":
 			return {
 				...query,
-				sort: SORT_KEYS.includes(value as SortKey) ? (value as SortKey) : "recommended",
+				sort: SORT_KEYS.includes(value as SortKey)
+					? (value as SortKey)
+					: "recommended",
 			};
 		default:
 			return query;
@@ -138,6 +193,8 @@ export function clearFacet(query: SearchQuery, facetId: FacetId): SearchQuery {
 			return { ...query, q: undefined };
 		case "city":
 			return { ...query, city: undefined };
+		case "bounds":
+			return { ...query, bounds: undefined };
 		case "gender":
 			return { ...query, gender: undefined };
 		case "duration":
@@ -176,35 +233,50 @@ function isNavigateSearchQuery(raw: Record<string, unknown>): boolean {
 
 export function parseSearchQuery(raw: Record<string, unknown>): SearchQuery {
 	if (isNavigateSearchQuery(raw)) {
-		return buildCariSearch({
-			q: typeof raw.q === "string" && raw.q.trim() ? raw.q.trim() : undefined,
-			city: typeof raw.city === "string" && CITIES.includes(raw.city as CitySlug)
-				? (raw.city as CitySlug)
-				: undefined,
-			gender:
-				typeof raw.gender === "string" && GENDERS.includes(raw.gender as Gender)
-					? (raw.gender as Gender)
-					: undefined,
-			duration:
-				typeof raw.duration === "string" && DURATIONS.includes(raw.duration as Duration)
-					? (raw.duration as Duration)
-					: undefined,
-			priceMin: typeof raw.priceMin === "number" ? raw.priceMin : undefined,
-			priceMax: typeof raw.priceMax === "number" ? raw.priceMax : undefined,
-			facilities: Array.isArray(raw.facilities)
-				? raw.facilities.filter((item): item is FacilityId => FACILITIES.includes(item as FacilityId))
-				: [],
-			rules: Array.isArray(raw.rules)
-				? raw.rules.filter((item): item is RuleId => RULES.includes(item as RuleId))
-				: [],
-			availableOnly: raw.availableOnly === true,
-			badges: Array.isArray(raw.badges)
-				? raw.badges.filter((item): item is BadgeId => BADGES.includes(item as BadgeId))
-				: [],
-			sort: typeof raw.sort === "string" && SORT_KEYS.includes(raw.sort as SortKey)
-				? (raw.sort as SortKey)
-				: "recommended",
-		});
+		return xorCityAndBounds(
+			buildCariSearch({
+				q: typeof raw.q === "string" && raw.q.trim() ? raw.q.trim() : undefined,
+				city:
+					typeof raw.city === "string" && CITIES.includes(raw.city as CitySlug)
+						? (raw.city as CitySlug)
+						: undefined,
+				gender:
+					typeof raw.gender === "string" &&
+					GENDERS.includes(raw.gender as Gender)
+						? (raw.gender as Gender)
+						: undefined,
+				duration:
+					typeof raw.duration === "string" &&
+					DURATIONS.includes(raw.duration as Duration)
+						? (raw.duration as Duration)
+						: undefined,
+				priceMin: typeof raw.priceMin === "number" ? raw.priceMin : undefined,
+				priceMax: typeof raw.priceMax === "number" ? raw.priceMax : undefined,
+				facilities: Array.isArray(raw.facilities)
+					? raw.facilities.filter((item): item is FacilityId =>
+							FACILITIES.includes(item as FacilityId),
+						)
+					: [],
+				rules: Array.isArray(raw.rules)
+					? raw.rules.filter((item): item is RuleId =>
+							RULES.includes(item as RuleId),
+						)
+					: [],
+				availableOnly: raw.availableOnly === true,
+				badges: Array.isArray(raw.badges)
+					? raw.badges.filter((item): item is BadgeId =>
+							BADGES.includes(item as BadgeId),
+						)
+					: [],
+				sort:
+					typeof raw.sort === "string" &&
+					SORT_KEYS.includes(raw.sort as SortKey)
+						? (raw.sort as SortKey)
+						: "recommended",
+				bounds: parseBounds(raw.bounds) ?? parseBounds(raw.batas),
+				view: parseCariView(raw.view ?? raw.tampilan),
+			}),
+		);
 	}
 
 	const query = createEmptyQuery();
@@ -217,11 +289,17 @@ export function parseSearchQuery(raw: Record<string, unknown>): SearchQuery {
 		query.city = raw.city as CitySlug;
 	}
 
-	if (typeof raw.gender === "string" && GENDERS.includes(raw.gender as Gender)) {
+	if (
+		typeof raw.gender === "string" &&
+		GENDERS.includes(raw.gender as Gender)
+	) {
 		query.gender = raw.gender as Gender;
 	}
 
-	if (typeof raw.duration === "string" && DURATIONS.includes(raw.duration as Duration)) {
+	if (
+		typeof raw.duration === "string" &&
+		DURATIONS.includes(raw.duration as Duration)
+	) {
 		query.duration = raw.duration as Duration;
 	}
 
@@ -249,10 +327,15 @@ export function parseSearchQuery(raw: Record<string, unknown>): SearchQuery {
 		query.sort = raw.sort as SortKey;
 	}
 
-	return query;
+	query.bounds = parseBounds(raw.batas);
+	query.view = parseCariView(raw.tampilan);
+
+	return xorCityAndBounds(query);
 }
 
-export function serializeSearchQuery(query: SearchQuery): Record<string, string | undefined> {
+export function serializeSearchQuery(
+	query: SearchQuery,
+): Record<string, string | undefined> {
 	const params: Record<string, string | undefined> = {};
 
 	if (query.q) {
@@ -287,14 +370,28 @@ export function serializeSearchQuery(query: SearchQuery): Record<string, string 
 	if (query.sort !== "recommended") {
 		params.sort = query.sort;
 	}
+	if (query.bounds) {
+		params.batas = serializeBounds(query.bounds);
+	}
+	if (query.view !== "split") {
+		params.tampilan = query.view;
+	}
 
 	return params;
 }
 
-export function listingMatchesQuery(listing: KosListing, query: SearchQuery): boolean {
+export function listingMatchesQuery(
+	listing: KosListing,
+	query: SearchQuery,
+): boolean {
 	if (query.q) {
 		const needle = query.q.toLowerCase();
-		const haystack = [listing.name, listing.area, listing.city, listing.campus ?? ""]
+		const haystack = [
+			listing.name,
+			listing.area,
+			listing.city,
+			listing.campus ?? "",
+		]
 			.join(" ")
 			.toLowerCase();
 		if (!haystack.includes(needle)) {
@@ -322,11 +419,17 @@ export function listingMatchesQuery(listing: KosListing, query: SearchQuery): bo
 		return false;
 	}
 
-	if (query.facilities.length > 0 && !query.facilities.every((f) => listing.facilities.includes(f))) {
+	if (
+		query.facilities.length > 0 &&
+		!query.facilities.every((f) => listing.facilities.includes(f))
+	) {
 		return false;
 	}
 
-	if (query.rules.length > 0 && !query.rules.every((r) => listing.rules.includes(r))) {
+	if (
+		query.rules.length > 0 &&
+		!query.rules.every((r) => listing.rules.includes(r))
+	) {
 		return false;
 	}
 
@@ -334,7 +437,10 @@ export function listingMatchesQuery(listing: KosListing, query: SearchQuery): bo
 		return false;
 	}
 
-	if (query.badges.length > 0 && !query.badges.every((b) => listing.badges.includes(b))) {
+	if (
+		query.badges.length > 0 &&
+		!query.badges.every((b) => listing.badges.includes(b))
+	) {
 		return false;
 	}
 
@@ -372,7 +478,9 @@ export function sortListings(
 	}
 }
 
-export function buildActiveChips(query: SearchQuery): import("./types").ActiveChip[] {
+export function buildActiveChips(
+	query: SearchQuery,
+): import("./types").ActiveChip[] {
 	const chips: import("./types").ActiveChip[] = [];
 
 	if (query.q) {
@@ -388,6 +496,14 @@ export function buildActiveChips(query: SearchQuery): import("./types").ActiveCh
 			facetId: "city",
 			label: cityLabels[query.city],
 			next: clearFacet(query, "city"),
+		});
+	}
+
+	if (query.bounds) {
+		chips.push({
+			facetId: "bounds",
+			label: "Area peta",
+			next: clearFacet(query, "bounds"),
 		});
 	}
 
@@ -407,12 +523,11 @@ export function buildActiveChips(query: SearchQuery): import("./types").ActiveCh
 		});
 	}
 
-	if (query.priceMin !== undefined || query.priceMax !== undefined) {
-		const min = query.priceMin ?? 0;
-		const max = query.priceMax ?? "∞";
+	const priceLabel = formatPriceFilterLabel(query.priceMin, query.priceMax);
+	if (priceLabel) {
 		chips.push({
 			facetId: "price",
-			label: `Rp ${min.toLocaleString("id-ID")} – ${max === "∞" ? "∞" : `Rp ${max.toLocaleString("id-ID")}`}`,
+			label: priceLabel,
 			next: clearFacet(query, "price"),
 		});
 	}
@@ -458,22 +573,7 @@ export function buildActiveChips(query: SearchQuery): import("./types").ActiveCh
 		});
 	}
 
-	if (query.sort !== "recommended") {
-		chips.push({
-			facetId: "sort",
-			label: sortLabels[query.sort],
-			next: clearFacet(query, "sort"),
-		});
-	}
-
 	return chips;
 }
 
-export {
-	CITIES,
-	DURATIONS,
-	FACILITIES,
-	GENDERS,
-	RULES,
-	SORT_KEYS,
-};
+export { CITIES, DURATIONS, FACILITIES, GENDERS, RULES, SORT_KEYS };
