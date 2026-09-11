@@ -11,7 +11,7 @@ import {
 	useSearchDock,
 } from "@/components/search/search-dock";
 
-import UserMenu from "../user-menu";
+import UserMenu, { chromeButtonClass } from "../user-menu";
 import { HamburgerButton } from "./hamburger-button";
 import { DesktopNav, MobileNavPanel } from "./site-nav";
 
@@ -135,7 +135,15 @@ export function SiteHeader() {
 						<GroupSeparator className="self-stretch" />
 						<UserMenu />
 					</Group>
-					<div className="sm:hidden">
+					<div className="flex items-center gap-3 sm:hidden">
+						<Button
+							className={chromeButtonClass}
+							nativeButton={false}
+							render={<Link to="/login" />}
+							variant="outline"
+						>
+							Iklankan kos
+						</Button>
 						<UserMenu />
 					</div>
 					<HamburgerButton

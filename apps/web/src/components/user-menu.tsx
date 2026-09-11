@@ -13,7 +13,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 
 import { authClient } from "@/lib/auth-client";
 
-const chromeButtonClass =
+export const chromeButtonClass =
 	"h-11 px-4 text-sm lg:h-8 lg:px-2.5 lg:text-xs";
 
 export default function UserMenu({ className }: { className?: string }) {

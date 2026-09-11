@@ -51,6 +51,8 @@ MCP and tools:
 - [Firecrawl](https://www.firecrawl.dev). Full-page scrape of a reference.
 - Cloudflare docs MCP. Workers deploy, custom domain, `process.env`.
 
+
+
 ## On supervision as the job
 
 Most of the orchestration (`poteto-mode`, `architect`, `arena`) is lauren's [pstack](https://x.com/i/article/2094940651607715840). She called it "the art of supervising someone smarter than you" ([pt. 2](https://x.com/poteto/status/2097732320606507506)). First time I used it, I was working in a git worktree. The agent knew Base UI's API, TanStack's `head()`, and the View Transitions pseudo-elements better than I did. What it didn't know was what a kos listing should feel like to a student on a phone at 11pm, or when a folder tab looks off by two pixels. My job was that second half.
@@ -171,9 +173,13 @@ BETTER_AUTH_SECRET=any-string-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3001
 ```
 
+
+
 ## If I had more time
 
-Real coordinates and a real data source. Working auth, or strip it. Virtualize the `/cari` list once the catalog passes 30.
+Real coordinates and a real data source. Working auth, or strip it. Virtualize the `/cari` list once the catalog passes 30. 
+
+Run [react-doctor](https://github.com/millionco/react-doctor) on the UI the agent wrote. I looked at the screen. I didn't scan every effect.
 
 The rest is continuous improvement like the promo folder.
 
