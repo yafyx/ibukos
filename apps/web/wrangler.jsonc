@@ -1,0 +1,21 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ibukos",
+	"account_id": "7f944cb3e04f83888f63d90ba3c7854e",
+	"compatibility_date": "2026-09-11",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "@tanstack/react-start/server-entry",
+	"observability": {
+		"enabled": true
+	},
+	"routes": [
+		{
+			"pattern": "ibukos.yfyx.dev",
+			"custom_domain": true
+		}
+	],
+	"vars": {
+		"BETTER_AUTH_URL": "https://ibukos.yfyx.dev",
+		"NODE_ENV": "production"
+	}
+}

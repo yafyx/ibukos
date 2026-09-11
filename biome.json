@@ -25,6 +25,7 @@
       "!**/.alchemy",
       "!**/.svelte-kit",
       "!**/wrangler.jsonc",
+      "!**/.github",
       "!**/.source",
       "!**/convex/_generated"
     ]

@@ -26,7 +26,7 @@ const saveFeedbackCollapseMs: Record<SaveFeedbackKind, number> = {
 };
 
 const saveChipToggleClass =
-	"save-chip h-8 min-h-8 min-w-8 gap-0 overflow-hidden rounded-lg border-0 bg-background p-0 shadow-sm motion-reduce:transition-none sm:h-8 sm:min-h-8 data-pressed:!bg-background data-pressed:text-primary data-pressed:[&_svg_path]:fill-current data-pressed:[&_svg_path]:stroke-none dark:data-pressed:!bg-background";
+	"save-chip h-8 min-h-8 min-w-8 gap-0 overflow-hidden rounded-lg border border-border bg-background p-0 shadow-none before:shadow-none motion-reduce:transition-none sm:h-8 sm:min-h-8 data-pressed:!bg-background data-pressed:text-primary data-pressed:[&_svg_path]:fill-current data-pressed:[&_svg_path]:stroke-none dark:data-pressed:!bg-background";
 
 function saveAriaLabel(saved: boolean, name?: string) {
 	if (saved) {

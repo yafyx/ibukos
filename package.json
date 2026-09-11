@@ -28,6 +28,7 @@
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "dev:web": "turbo run dev -F web --",
+    "deploy": "turbo run deploy -F web --",
     "check": "biome check --write ."
   },
   "dependencies": {

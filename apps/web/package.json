@@ -6,6 +6,9 @@
 		"build": "vite build",
 		"serve": "vite preview",
 		"dev": "vite dev",
+		"preview": "vite preview",
+		"deploy": "VITE_SITE_URL=https://ibukos.yfyx.dev vite build && wrangler deploy",
+		"cf-typegen": "wrangler types",
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -33,6 +36,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@cloudflare/vite-plugin": "^1.54.7",
 		"@ibukos/config": "workspace:*",
 		"@tanstack/react-router-devtools": "^1.167.0",
 		"@testing-library/dom": "^10.4.1",
@@ -45,6 +49,7 @@
 		"react-grab": "^0.2.0",
 		"typescript": "catalog:",
 		"vite": "^8.1.5",
-		"web-vitals": "^6.0.1"
+		"web-vitals": "^6.0.1",
+		"wrangler": "^4.131.0"
 	}
 }

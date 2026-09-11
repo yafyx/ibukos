@@ -52,7 +52,6 @@ import {
 	listingLoveItems,
 	listingOverview,
 	ownerPhoneFor,
-	ownerWhatsAppHref,
 	sameDay,
 	splitOverview,
 	upcomingDays,
@@ -74,6 +73,9 @@ import { pressable } from "@/lib/motion";
 const highlightTile =
 	"flex h-20 min-w-20 flex-col items-center justify-center gap-1 rounded-xl bg-muted/80 px-3";
 const mutedCard = "rounded-2xl bg-muted/80 p-4";
+
+// Demo placeholder so the WhatsApp CTA doesn't open a real chat.
+const DEMO_VIDEO_HREF = "https://www.youtube.com/shorts/YuRxuQ1QoMQ";
 
 const facilityIcons: Record<FacilityId, typeof Wifi01Icon> = {
 	ac: SnowflakeIcon,
@@ -670,7 +672,7 @@ export function KosActionCard({
 								"inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-background lg:hidden",
 								pressable,
 							)}
-							href={ownerWhatsAppHref(listing)}
+							href={DEMO_VIDEO_HREF}
 							rel="noreferrer"
 							target="_blank"
 						>
@@ -695,7 +697,7 @@ export function KosActionCard({
 								"hidden h-10 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background font-medium text-sm lg:inline-flex",
 								pressable,
 							)}
-							href={ownerWhatsAppHref(listing)}
+							href={DEMO_VIDEO_HREF}
 							rel="noreferrer"
 							target="_blank"
 						>
