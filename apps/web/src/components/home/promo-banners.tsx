@@ -1,60 +1,113 @@
 "use client";
 
+import { Button } from "@ibukos/ui/components/button";
+import {
+	Carousel,
+	CarouselContent,
+	CarouselItem,
+} from "@ibukos/ui/components/carousel";
+import { cn } from "@ibukos/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 
+import { SectionHeader } from "@/components/home/section-header";
 import { KosImage } from "@/components/media/kos-image";
 import { buildCariSearch } from "@/domain/facets/url";
 import { promoSlides } from "@/domain/kos/catalog";
-import { pressable } from "@/lib/motion";
+import type { PromoSlide } from "@/domain/kos/types";
+import { prefersReducedMotion, pressable } from "@/lib/motion";
+
+const slideOutline =
+	"outline outline-1 outline-black/10 -outline-offset-1 dark:outline-white/10";
+
+/** Source promos are 540×720 (3:4). Size the slide from the image, not the viewport. */
+const PROMO_WIDTH = 540;
+const PROMO_HEIGHT = 720;
 
 export function PromoBanners() {
-	const featured = promoSlides[0];
-	const rest = promoSlides.slice(1);
-
-	if (!featured) {
+	if (promoSlides.length === 0) {
 		return null;
 	}
 
+	const reduced = prefersReducedMotion();
+
 	return (
-		<section className="flex flex-col gap-3">
-			<h2 className="font-heading text-lg font-semibold tracking-tight">Promo spesial</h2>
-			<div className="grid gap-3 md:grid-cols-3">
-				<PromoTile className="md:col-span-2" slide={featured} />
-				<div className="grid gap-3">
-					{rest.map((slide) => (
-						<PromoTile key={slide.id} slide={slide} />
-					))}
-				</div>
+		<section
+			aria-labelledby="promo-banners-heading"
+			className="flex flex-col gap-3"
+		>
+			<SectionHeader
+				action={
+					<Button
+						render={
+							<Link
+								search={buildCariSearch({ badges: ["promo"] })}
+								to="/cari"
+							/>
+						}
+						size="sm"
+						variant="ghost"
+					>
+						Lihat semua promo
+					</Button>
+				}
+				id="promo-banners-heading"
+				title="Promo & event"
+			/>
+
+			<div>
+				<Carousel
+					className="w-full"
+					opts={{
+						align: "start",
+						containScroll: "trimSnaps",
+						dragFree: false,
+						duration: reduced ? 0 : 20,
+						loop: false,
+					}}
+				>
+					<CarouselContent className="cursor-grab items-start gap-3 active:cursor-grabbing sm:gap-4">
+						{promoSlides.map((slide, index) => (
+							<CarouselItem
+								className="basis-auto shrink-0 self-start"
+								key={slide.id}
+							>
+								<PromoTile index={index} slide={slide} />
+							</CarouselItem>
+						))}
+					</CarouselContent>
+				</Carousel>
 			</div>
 		</section>
 	);
 }
 
-function PromoTile({
-	className,
-	slide,
-}: {
-	className?: string;
-	slide: (typeof promoSlides)[number];
-}) {
+function PromoTile({ index, slide }: { index: number; slide: PromoSlide }) {
+	const label = `${slide.title}. ${slide.subtitle}`;
+
 	return (
 		<Link
-			className={`relative block min-h-40 overflow-hidden ${pressable} ${className ?? ""}`}
+			aria-label={label}
+			className={cn(
+				"group relative block w-fit overflow-hidden rounded-2xl bg-muted shadow-sm",
+				"focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+				pressable,
+			)}
 			search={buildCariSearch(slide.query ?? {})}
 			to="/cari"
 		>
 			<KosImage
-				alt=""
-				className="hover-fine-scale size-full min-h-40 object-cover outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
-				height={400}
+				alt={slide.title}
+				className={cn(
+					"block h-auto w-[min(84vw,21rem)] sm:w-[20rem] md:w-[21rem] lg:w-[22rem]",
+					slideOutline,
+				)}
+				decoding={index === 0 ? "sync" : "async"}
+				fetchPriority={index === 0 ? "high" : undefined}
+				height={PROMO_HEIGHT}
+				loading={index <= 1 ? "eager" : "lazy"}
 				src={slide.image}
-				width={700}
+				width={PROMO_WIDTH}
 			/>
-			<div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/15 to-transparent" />
-			<div className="absolute inset-x-0 bottom-0 p-4 text-white">
-				<p className="font-semibold text-pretty">{slide.title}</p>
-				<p className="text-sm text-white/80 text-pretty">{slide.subtitle}</p>
-			</div>
 		</Link>
 	);
 }

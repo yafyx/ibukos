@@ -1,39 +1,26 @@
 import { Button } from "@ibukos/ui/components/button";
-import {
-	Card,
-	CardDescription,
-	CardHeader,
-	CardPanel,
-	CardTitle,
-} from "@ibukos/ui/components/card";
+import { Card } from "@ibukos/ui/components/card";
 import { Link } from "@tanstack/react-router";
-
-import { KosImage } from "@/components/media/kos-image";
-
-const ownerPhoto =
-	"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&q=80";
 
 export function OwnerBanner() {
 	return (
-		<Card className="py-0 sm:grid sm:grid-cols-[1fr_minmax(12rem,18rem)] sm:items-stretch">
-			<CardHeader className="justify-center gap-3 py-5 sm:py-6">
-				<CardTitle className="font-heading text-lg font-semibold tracking-tight text-pretty">
-					Daftarkan kos kamu di Ibukos
-				</CardTitle>
-				<CardDescription className="text-sm text-pretty">
-					Jangkau pencari kos di kota dan kampus se-Indonesia.
-				</CardDescription>
-				<Button render={<Link to="/login" />}>Daftarkan kos</Button>
-			</CardHeader>
-			<CardPanel className="hidden p-0 sm:block">
-				<KosImage
-					alt=""
-					className="h-full min-h-40 w-full object-cover"
-					height={280}
-					src={ownerPhoto}
-					width={420}
-				/>
-			</CardPanel>
-		</Card>
+		<section aria-labelledby="owner-banner-title">
+			<Card className="flex-row flex-wrap items-center justify-between gap-x-4 gap-y-3 bg-primary/[0.04] py-4">
+				<div className="flex min-w-0 flex-col gap-1 px-(--card-spacing)">
+					<h2
+						className="text-pretty font-heading font-semibold text-sm tracking-tight sm:text-base"
+						id="owner-banner-title"
+					>
+						Isi kamar kos lebih cepat
+					</h2>
+					<p className="text-pretty text-muted-foreground text-xs leading-relaxed sm:text-sm">
+						Iklankan gratis. Listing terverifikasi, siap dipromosikan.
+					</p>
+				</div>
+				<div className="px-(--card-spacing)">
+					<Button render={<Link to="/login" />}>Iklankan kos</Button>
+				</div>
+			</Card>
+		</section>
 	);
 }

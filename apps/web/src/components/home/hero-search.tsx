@@ -3,36 +3,64 @@
 import { Button } from "@ibukos/ui/components/button";
 import { Group, GroupSeparator } from "@ibukos/ui/components/group";
 import { Link } from "@tanstack/react-router";
-import { Fragment } from "react";
+import { Fragment, useRef } from "react";
 
-import { LocationSearch } from "@/components/search/location-search";
+import {
+	LocationSearchSlot,
+	useHeroSearchSentinel,
+} from "@/components/search/search-dock";
 import { buildCariSearch } from "@/domain/facets/url";
 import { popularCities } from "@/domain/kos/catalog";
+import { parseCitySlug } from "@/domain/seo/locations";
+import { pressable } from "@/lib/motion";
 
 export function HeroSearch() {
 	const cities = popularCities.slice(0, 5);
+	const sentinelRef = useRef<HTMLDivElement>(null);
+	const heroVisible = useHeroSearchSentinel(sentinelRef);
 
 	return (
 		<section className="relative overflow-hidden border-b bg-primary/[0.04]">
 			<CitySkyline />
-			<div className="page-shell relative flex flex-col items-start gap-4 py-10 sm:py-14">
-				<div className="flex max-w-xl flex-col gap-1">
-					<h1 className="text-pretty font-heading font-semibold text-3xl tracking-tight sm:text-4xl">
+			<div className="page-shell relative flex flex-col items-start gap-4 py-8 sm:py-16">
+				<div className="flex max-w-xl flex-col gap-2">
+					<h1 className="text-pretty font-heading font-semibold text-3xl leading-tight tracking-tight sm:text-4xl">
 						Mau cari kos?
 					</h1>
-					<p className="text-muted-foreground">
+					<p className="text-muted-foreground text-sm sm:text-base">
 						Dapatkan infonya dan langsung sewa di Ibukos.
 					</p>
 				</div>
-				<LocationSearch size="hero" />
-				<Group aria-label="Kota populer">
+				<div className="w-full max-w-xl" ref={sentinelRef}>
+					{heroVisible ? (
+						<LocationSearchSlot size="hero" />
+					) : (
+						<div aria-hidden="true" className="h-12" />
+					)}
+				</div>
+
+				{/* Mobile: swipeable chip strip, full-bleed so the last chip peeks at the edge */}
+				<nav
+					aria-label="Area kos terpopuler"
+					className="-mx-4 flex w-[calc(100%+2rem)] snap-x gap-2 overflow-x-auto px-4 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden"
+				>
+					{cities.map((city) => (
+						<CityChip
+							className={`shrink-0 snap-start whitespace-nowrap rounded-full border border-border bg-background px-4 py-2 font-medium text-sm ${pressable}`}
+							key={city.slug}
+							label={city.label}
+							slug={city.slug}
+						/>
+					))}
+				</nav>
+
+				{/* Desktop: joined button group */}
+				<Group aria-label="Area kos terpopuler" className="hidden sm:flex">
 					{cities.map((city, index) => (
 						<Fragment key={city.slug}>
 							{index > 0 ? <GroupSeparator /> : null}
 							<Button
-								render={
-									<Link search={buildCariSearch(city.query)} to="/cari" />
-								}
+								render={<CityLink slug={city.slug} />}
 								size="sm"
 								variant="outline"
 							>
@@ -44,6 +72,42 @@ export function HeroSearch() {
 			</div>
 		</section>
 	);
+}
+
+function CityChip({
+	slug,
+	label,
+	className,
+}: {
+	slug: string;
+	label: string;
+	className?: string;
+}) {
+	const city = parseCitySlug(slug);
+	if (city) {
+		return (
+			<Link className={className} params={{ city }} to="/kota/$city">
+				{label}
+			</Link>
+		);
+	}
+	return (
+		<Link
+			className={className}
+			search={buildCariSearch({ q: label })}
+			to="/cari"
+		>
+			{label}
+		</Link>
+	);
+}
+
+function CityLink({ slug }: { slug: string }) {
+	const city = parseCitySlug(slug);
+	if (city) {
+		return <Link params={{ city }} to="/kota/$city" />;
+	}
+	return <Link search={buildCariSearch({ q: slug })} to="/cari" />;
 }
 
 function CitySkyline() {
