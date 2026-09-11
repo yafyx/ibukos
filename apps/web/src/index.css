@@ -4,7 +4,7 @@
 	--page-gutter: 1rem;
 	--page-inline-start: max(var(--page-gutter), env(safe-area-inset-left));
 	--page-inline-end: max(var(--page-gutter), env(safe-area-inset-right));
-	--site-header-height: 3.5rem;
+	--site-header-height: 3.75rem;
 	--duration-exit: 150ms;
 	--duration-enter: 180ms;
 	--duration-move: 220ms;

@@ -15,7 +15,7 @@ export function HamburgerButton({
 			{...props}
 			aria-expanded={open}
 			aria-label={open ? "Tutup menu" : "Buka menu"}
-			className={cn("lg:hidden", className)}
+			className={cn("size-11 lg:hidden lg:size-8", className)}
 			size="icon"
 			type="button"
 			variant="outline"

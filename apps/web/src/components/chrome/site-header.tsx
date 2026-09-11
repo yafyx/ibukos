@@ -98,16 +98,16 @@ export function SiteHeader() {
 			ref={headerRef}
 			style={{ viewTransitionName: "site-header" }}
 		>
-			<div className="page-shell flex min-h-14 flex-wrap items-center gap-2 py-2 sm:gap-3 lg:h-14 lg:flex-nowrap lg:py-0">
+			<div className="page-shell flex flex-wrap items-center gap-2 py-2 sm:gap-3 lg:h-14 lg:flex-nowrap lg:py-0">
 				<Link
-					className="inline-flex h-8 shrink-0 items-center gap-2 font-heading font-semibold text-primary text-xl tracking-tight"
+					className="inline-flex h-11 shrink-0 items-center gap-2.5 font-heading font-semibold text-primary text-xl tracking-tight lg:h-8 lg:gap-2"
 					onClick={() => closeMenu(true)}
 					to="/"
 				>
 					<img
 						alt=""
 						aria-hidden="true"
-						className="size-8 shrink-0 rounded-lg object-cover"
+						className="size-9 shrink-0 rounded-lg object-cover lg:size-8"
 						src="/brand/ibukos-ibu.png"
 					/>
 					<span className="leading-none">Ibukos</span>
@@ -115,25 +115,32 @@ export function SiteHeader() {
 				<DesktopNav />
 				{showChromeSearch ? (
 					<LocationSearchSlot
-						className="order-last h-8 w-full min-w-0 basis-full lg:order-none lg:min-w-48 lg:flex-1 lg:basis-auto"
+						className="order-last h-11 w-full min-w-0 basis-full lg:order-none lg:h-8 lg:min-w-48 lg:flex-1 lg:basis-auto"
 						size="chrome"
 					/>
 				) : null}
-				<div className="ms-auto flex h-8 items-center gap-2">
-					<Group aria-label="Akun" className="h-8 items-center">
+				<div className="ms-auto flex items-center gap-3 lg:gap-2">
+					<Group
+						aria-label="Akun"
+						className="hidden h-8 items-center sm:flex"
+					>
 						<Button
-							className="hidden h-8 sm:inline-flex"
+							className="h-8"
 							nativeButton={false}
 							render={<Link to="/login" />}
 							variant="outline"
 						>
 							Iklankan kos
 						</Button>
-						<GroupSeparator className="hidden self-stretch sm:block" />
+						<GroupSeparator className="self-stretch" />
 						<UserMenu />
 					</Group>
+					<div className="sm:hidden">
+						<UserMenu />
+					</div>
 					<HamburgerButton
 						aria-controls={menuId}
+						className="size-11 lg:size-8"
 						onClick={() => {
 							if (menuOpen) {
 								closeMenu();

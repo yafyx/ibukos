@@ -39,10 +39,9 @@ export function HeroSearch() {
 					)}
 				</div>
 
-				{/* Mobile: swipeable chip strip, full-bleed so the last chip peeks at the edge */}
 				<nav
 					aria-label="Area kos terpopuler"
-					className="-mx-4 flex w-[calc(100%+2rem)] snap-x gap-2 overflow-x-auto px-4 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden"
+					className="flex w-full max-w-xl snap-x gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:hidden [&::-webkit-scrollbar]:hidden"
 				>
 					{cities.map((city) => (
 						<CityChip
